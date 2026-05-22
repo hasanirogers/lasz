@@ -5,17 +5,9 @@ const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
 const heroResponse = await fetch(`${REST_WP_URL}/hero?_embed`);
 const heroData = await heroResponse.json();
 
-// Debug: Check what's available in embedded media
-if (heroData.length > 0 && heroData[0]._embedded?.['wp:featuredmedia']?.[0]) {
-  const media = heroData[0]._embedded['wp:featuredmedia'][0];
-  console.log('Media data available:', {
-    source_url: media.source_url,
-    alt_text: media.alt_text,
-    width: media.width,
-    height: media.height,
-    media_details: media.media_details
-  });
-}
+// if (heroData.length > 0 && heroData[0]._embedded?.['wp:featuredmedia']?.[0]) {
+//   const media = heroData[0]._embedded['wp:featuredmedia'][0];
+// }
 
 const breakponts = {
   768: { perView: 1 },

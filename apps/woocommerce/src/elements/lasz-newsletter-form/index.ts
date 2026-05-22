@@ -29,7 +29,7 @@ export default class LaszNewsletterForm extends LitElement {
           <kemet-input
             slot="input"
             type="text"
-            name="firstName"
+            name="firstname"
             placeholder="Enter your first name"
             required
             validate-on-blur
@@ -48,7 +48,7 @@ export default class LaszNewsletterForm extends LitElement {
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
     const email = formData.get('email');
-    const firstName = formData.get('firstName');
+    const firstname = formData.get('firstname');
 
     try {
       const response = await fetch('/api/newsletter', {
@@ -58,8 +58,7 @@ export default class LaszNewsletterForm extends LitElement {
         },
         body: JSON.stringify({
           email,
-          first_name: firstName || undefined,
-          lists: [1] // Replace with actual MailPoet list ID
+          firstname: firstname || undefined,
         })
       });
 

@@ -2,60 +2,52 @@ import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-interface MailchimpSubscriber {
-  email_address: string;
-  status: 'subscribed' | 'pending' | 'unsubscribed';
-  merge_fields?: {
-    FNAME?: string;
-    LNAME?: string;
-  };
+interface Subscriber {
+  email: string;
+  firstname: string;
+  lastname?: string;
+  groups?: string[];
+  phone?: string;
+  trigger_automation?: boolean;
 }
 
-interface MailchimpResponse {
+interface Response {
   success: boolean;
   data?: any;
   errors?: string[];
+  message?: string;
 }
 
-async function subscribeToNewsletter(subscriberData: MailchimpSubscriber): Promise<MailchimpResponse> {
-  const MAILCHIMP_API_KEY = import.meta.env.MAILCHIMP_API_KEY;
-  const MAILCHIMP_AUDIENCE_ID = import.meta.env.MAILCHIMP_AUDIENCE_ID;
-  const MAILCHIMP_DC = MAILCHIMP_API_KEY?.split('-')[1]; // Extract data center from API key
+async function subscribeToNewsletter(subscriberData: Subscriber): Promise<Response> {
+  const SENDER_API_KEY = import.meta.env.SENDER_API_KEY;
 
-  if (!MAILCHIMP_API_KEY || !MAILCHIMP_AUDIENCE_ID) {
-    console.error('Mailchimp API key or Audience ID not configured');
+  if (!SENDER_API_KEY) {
+    console.error('API key not configured');
     return {
       success: false,
-      errors: ['Server configuration error: Mailchimp credentials not configured']
+      errors: ['Server configuration error: Credentials not configured']
     };
   }
 
-  if (!MAILCHIMP_DC) {
-    console.error('Invalid Mailchimp API key format');
-    return {
-      success: false,
-      errors: ['Server configuration error: Invalid Mailchimp API key']
-    };
-  }
-
-  const fullUrl = `https://${MAILCHIMP_DC}.api.mailchimp.com/3.0/lists/${MAILCHIMP_AUDIENCE_ID}/members`;
-  console.log('Attempting Mailchimp subscription to:', fullUrl);
+  const url = `https://api.sender.net/v2/subscribers`;
+  console.log('Attempting subscription to:', url);
 
   try {
-    const response = await fetch(fullUrl, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${Buffer.from(`anystring:${MAILCHIMP_API_KEY}`).toString('base64')}`,
+        'Authorization': `Bearer ${SENDER_API_KEY}`,
       },
       body: JSON.stringify(subscriberData)
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Mailchimp API error: ${response.status} - ${errorText}`);
+      console.error(`API error: ${response.status} - ${errorText}`);
 
-      // Parse Mailchimp error response for better error messages
+      // Parse error response for better error messages
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = JSON.parse(errorText);
@@ -72,13 +64,13 @@ async function subscribeToNewsletter(subscriberData: MailchimpSubscriber): Promi
     }
 
     const result = await response.json();
-    console.log('Mailchimp subscription successful:', result);
+    console.log('Subscription successful:', result);
     return {
       success: true,
       data: result
     };
   } catch (error) {
-    console.error('Mailchimp subscription error:', error);
+    console.error('Subscription error:', error);
     return {
       success: false,
       errors: [error instanceof Error ? error.message : 'Unknown error occurred']
@@ -86,28 +78,11 @@ async function subscribeToNewsletter(subscriberData: MailchimpSubscriber): Promi
   }
 }
 
-// async function getMailPoetLists(): Promise<any[]> {
-//   const API_URL = import.meta.env.PUBLIC_API_URL;
-
-//   try {
-//     const response = await fetch(`${API_URL}/wp-json/mailpoet/v3/lists`);
-
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! status: ${response.status}`);
-//     }
-
-//     const data = await response.json();
-//     return data.data || [];
-//   } catch (error) {
-//     console.error('MailPoet lists error:', error);
-//     return [];
-//   }
-// }
 
 export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json();
-    const { email, firstname, lists } = body;
+    const { email, firstname } = body;
 
     if (!email) {
       return new Response(
@@ -124,12 +99,9 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     const result = await subscribeToNewsletter({
-      email_address: email,
-      status: 'subscribed',
-      merge_fields: {
-        FNAME: firstname || '',
-        LNAME: '' // You can add last_name field if needed
-      }
+      email: email,
+      firstname: firstname,
+      trigger_automation: false
     });
 
     return new Response(

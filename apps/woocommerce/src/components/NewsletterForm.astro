@@ -1,0 +1,50 @@
+---
+// import { subscribeToNewsletter } from '../utils/mailpoet.ts';
+
+// Handle form submission
+// if (Astro.request.method === 'POST') {
+//   const formData = await Astro.request.formData();
+//   const email = formData.get('email') as string;
+//   const firstName = formData.get('firstName') as string;
+
+//   if (email) {
+//     const result = await subscribeToNewsletter({
+//       email,
+//       first_name: firstName || undefined,
+//       // Add list ID if you have specific newsletter lists
+//       lists: [1] // Replace with actual MailPoet list ID
+//     });
+
+//     // You can handle success/error states here
+//     console.log('Newsletter subscription result:', result);
+//   }
+// }
+---
+
+<lasz-page-container>
+  <lasz-newsletter>
+    <div>
+      <svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" width="148" height="148">
+        <defs>
+          <style>.cls-1{fill:none;}.cls-2{fill:none;stroke:#ffffff;stroke-miterlimit:10;stroke-width:6px;}</style>
+        </defs>
+        <title/>
+        <g data-name="Layer 5" id="Layer_5">
+          <polygon class="cls-1" points="107.86 34.3 63.99 69.5 20.14 34.3 107.86 34.3"/>
+          <rect class="cls-2" height="59.38" width="87.71" x="20.14" y="34.32"/>
+          <polyline class="cls-2" points="107.85 34.32 64 69.49 20.14 34.32"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <h2>Sign up to our Newsletter</h2>
+      <p>Be the First to Know. Sign up to newsletter today</p>
+    </div>
+    <div>
+      <lasz-newsletter-form></lasz-newsletter-form>
+    </div>
+  </lasz-newsletter>
+</lasz-page-container>
+<script>
+  import '../elements/lasz-newsletter-form';
+</script>

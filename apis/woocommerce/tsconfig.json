@@ -1,0 +1,42 @@
+
+{
+  "compilerOptions": {
+    "target": "es2022",                        // Modern JavaScript target
+    "module": "esnext",                        // Use ES module syntax (import/export)
+    "moduleResolution": "bundler",             // For bundling (optional, depending on your setup)
+    "declaration": false,                      // Generate declaration files (.d.ts)
+    // "declarationDir": ".",                  // Put declaration files in the same directory
+    "outDir": "lasz-woocommerce/build",         // Output .js and .d.ts in the same directory as the .ts file
+    "rootDir": ".",                            // Root directory of your source files
+    "allowJs": false,                          // Don't allow JavaScript files
+    "esModuleInterop": true,                   // For module compatibility (optional)
+    "skipLibCheck": true,                      // Skip checking .d.ts files in libraries (for faster builds)
+    "forceConsistentCasingInFileNames": true,  // Ensures case consistency in imports
+    "experimentalDecorators": true,            // required for @customElement
+    "useDefineForClassFields": false,          // required for lit
+    "jsx": "react",
+    "noEmitOnError": true,
+    "lib": ["es2017", "dom"],
+    "strict": false,
+    "importHelpers": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "incremental": true,
+    "resolveJsonModule": true,
+    "noEmit": false,
+  },
+  "types": ["vitest", "node"],
+  "typeRoots": [
+    "./node_modules/@wordpress",
+    "./node_modules/@types",
+    "./node_modules",
+    "./lasz-woocommerce/src/types"
+  ],
+  "include": [
+    "./lasz-woocommerce/**/*.ts",
+    "./lasz-woocommerce/**/*.tsx",
+    "lasz-woocommerce/types/**/*.d.ts",
+    "node_modules/@wordpress/**/*.d.ts"
+  ],
+  "exclude": ["node_modules"]
+}

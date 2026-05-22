@@ -1,0 +1,15 @@
+---
+const { slug } = Astro.params;
+
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
+
+const theContentResponse = await fetch(`${REST_WP_URL}/pages?slug=${slug}`);
+const theContentData = await theContentResponse.json();
+const theContent = theContentData[0]?.content?.rendered ?? null;
+
+---
+
+<lasz-page-main>
+  <Fragment set:html={theContent} />
+</lasz-page-main>

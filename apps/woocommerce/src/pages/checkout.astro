@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Checkout">
+  <script src="https://js.stripe.com/v3/"></script>
+  <lasz-checkout>
+    <div slot="stripe-element-container">
+      <div id="card-element" class="stripe-card-element"></div>
+    </div>
+    <div slot="stripe-errors-container">
+      <div id="card-errors" role="alert" class="card-errors"></div>
+    </div>
+  </lasz-checkout>
+</Layout>
+
+<script>
+  import '../elements/lasz-checkout';
+</script>
+

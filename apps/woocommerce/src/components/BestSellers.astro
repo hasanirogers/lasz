@@ -1,0 +1,16 @@
+---
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
+
+const bestSellingResponse = await fetch(`${REST_WC_URL}/products?orderby=popularity&per_page=4`);
+const bestSellingProducts = await bestSellingResponse.json();
+
+---
+{bestSellingProducts.length > 0 && (
+  <lasz-page-container>
+    <h2>Best Sellers</h2>
+    <lasz-products>
+      {bestSellingProducts.map((product: any) => <lasz-product data={JSON.stringify(product)}></lasz-product>)}
+    </lasz-products>
+  </lasz-page-container>
+)}

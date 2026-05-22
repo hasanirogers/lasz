@@ -1,0 +1,121 @@
+---
+import { Image } from 'astro:assets';
+import LASZLogo from '../../public/logo.webp';
+---
+
+<main>
+  <Image src={LASZLogo} width={196} height={208} alt="LASZ stack logo" />
+  <h1>Todo App with the LASZ Stack</h1>
+  <kemet-card>
+    <todo-input label="Add"></todo-input>
+    <todo-list></todo-list>
+    <todo-footer slot="footer"></todo-footer>
+  </kemet-card>
+</main>
+<todo-login-button></todo-login-button>
+<todo-modals></todo-modals>
+<todo-splash></todo-splash>
+<kemet-alert filled rounded="lg"></kemet-alert>
+
+<script>
+  // astro knows to load the following on the client
+  // ---
+  // we want these design system elements to load globally
+  import 'kemet-ui/elements/card';
+  import 'kemet-ui/elements/button';
+  import 'kemet-ui/elements/fab';
+  import 'kemet-ui/elements/alert';
+  import 'kemet-ui/elements/icon-bootstrap';
+  // kemet-ui's default import for all elements can be used for type safety
+  import HTMLKemetAlertElement from 'kemet-ui/elements/alert.mjs';
+  import HTMLKemetIconBootstrapElement from 'kemet-ui/elements/icon-bootstrap.mjs';
+  // these are our LASZ appelements
+  import '../elements/todo-input/todo-input';
+  import '../elements/todo-list/todo-list';
+  import '../elements/todo-footer/todo-footer';
+  import '../elements/todo-login-button/todo-login-button';
+  import '../elements/todo-modals/todo-modals';
+  import '../elements/todo-splash/todo-splash';
+  // stores
+  import alertStore from '../stores/alert';
+
+  // we're not creating a lit wrapper element for kemet-alert
+  // so we can handle the alert without the Zustand Controller
+  const alertElement = document.querySelector('kemet-alert') as HTMLKemetAlertElement;
+
+  if (alertElement) {
+    // get the state from store
+    const alertConfig = alertStore.getState().config;
+    // set the default properties with values from the store
+    alertElement.opened = alertConfig.opened;
+    alertElement.overlay = 'top-full';
+    alertElement.status = 'error';
+    alertElement.closable = alertConfig.closeable ?? true;
+    alertElement.innerHTML = alertConfig.message as string;
+    // subscribe to changes
+    alertStore.subscribe((state) => {
+      alertElement.opened = state.config.opened;
+      alertElement.innerHTML = state.config.message as string;
+      if (state.config.icon) {
+        const alertIcon = document.createElement('kemet-icon-bootstrap') as HTMLKemetIconBootstrapElement;
+        alertIcon.setAttribute('slot', 'icon');
+        alertIcon.icon = state.config.icon;
+        alertElement.appendChild(alertIcon);
+      }
+    });
+  }
+</script>
+
+<style>
+  img {
+    display: inline-flex;
+  }
+
+  main,
+  h1, h2, h3 {
+    text-align: center;
+    line-height: 1.2;
+  }
+
+
+  kemet-card {
+    --kemet-card-background-color: rgb(var(--kemet-color-gray-900));
+    --kemet-card-border: 0;
+    --kemet-card-max-width: 960px;
+    --kemet-card-footer-border-top: 1px solid rgb(var(--kemet-color-gray-800));
+    --kemet-card-color: rgb(var(--kemet-color-gray-300));
+    --kemet-card-border-radius: 1rem;
+
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+
+    @media (width > 720px) {
+      width: 66vw;
+    }
+  }
+
+  kemet-alert {
+    --kemet-alert-padding: 0.5rem 1rem;
+    margin: 1rem;
+    width: calc(100% - 2rem);
+  }
+
+  kemet-alert[status="error"] {
+    --kemet-alert-border: 3px solid rgb(var(--kemet-color-error) / 20%);
+  }
+
+  kemet-alert[status="success"] {
+    --kemet-alert-border: 3px solid rgb(var(--kemet-color-success) / 20%);
+  }
+
+  todo-list {
+    min-height: 240px;
+  }
+
+  todo-login-button {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+  }
+</style>

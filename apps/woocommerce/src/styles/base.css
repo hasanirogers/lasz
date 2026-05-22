@@ -1,0 +1,93 @@
+*,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :root {
+    --kemet-color-primary: var(--kemet-color-emerald-700);
+
+    --color-white: rgb(var(--kemet-color-white));
+    --color-gray-300: rgb(var(--kemet-color-gray-300));
+    --color-gray-800: rgb(var(--kemet-color-gray-800));
+
+    --color-success: rgb(var(--kemet-color-success));
+    --color-danger: rgb(var(--kemet-color-error));
+    --color-link: rgb(var(--kemet-color-violet-600));
+    --color-sale: rgb(var(--kemet-color-green-600));
+    --color-text: rgb(var(--kemet-color-gray-700));
+    --color-border: rgb(var(--kemet-color-gray-300));
+    --color-border-light: rgb(var(--kemet-color-gray-200));
+    --color-button-background: rgb(var(--kemet-color-gray-800));
+
+    --color-background: rgb(var(--kemet-color-white));
+    --color-primary: rgb(var(--kemet-color-violet-900));
+
+    --page-width: 1440px;
+
+    --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  html {
+    overflow: auto;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.25rem;
+    margin: 0;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    color: var(--color-text);
+    background-color: var(--color-background);
+  }
+
+  a {
+    color: var(--color-tertiary);
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    border-bottom: 1px solid transparent;
+
+    &:hover {
+      border-bottom: 1px solid;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 200;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+  }
+
+  hr {
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid rgb(var(--kemet-color-gray-200));
+  }
+
+  table {
+    color: inherit;
+  }
+
+  input,
+  textarea {
+    font-size: 1rem;
+    padding: 1rem;
+  }
+
+  textarea {
+    min-height: 10em;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+

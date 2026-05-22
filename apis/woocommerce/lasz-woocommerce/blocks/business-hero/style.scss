@@ -1,0 +1,64 @@
+business-hero {
+	display: block;
+	width: 100%;
+	overflow: hidden;
+	padding: 0;
+	position: relative;
+	background-size: auto 100%;
+	background-position: center;
+	background-repeat: no-repeat;
+
+	@media screen and (width > 768px) {
+	  background-size: 100% auto;
+	}
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    --wp--preset--font-size--small: 1rem;
+    --wp--preset--font-size--medium: clamp(1rem, 10vw, 2rem);
+    --wp--preset--font-size--large: clamp(1.5rem, 10vw, 4rem);
+    --wp--preset--font-size--x-large: clamp(2rem, 10vw, 6rem);
+
+    line-height: 1;
+  }
+
+	kemet-button {
+		white-space: nowrap;
+
+		&[outlined] {
+			--kemet-button-color: white;
+			--kemet-button-border: 1px solid white;
+			--kemet-button-background-color: transparent;
+		}
+	}
+
+	.container {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+
+		height: 100%;
+		position: relative;
+		z-index: 2;
+		padding: 1rem;
+	}
+
+	.max {
+		margin: auto;
+		max-width: var(--page-width);
+	}
+
+	.overlay {
+		position: absolute;
+		width: 100%;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		z-index: 1;
+	}
+}

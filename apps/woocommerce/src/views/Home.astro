@@ -1,0 +1,31 @@
+---
+// import { Image } from 'astro:assets';
+// import LASZLogo from '../../public/logo.webp';
+
+import Hero from '../components/Hero.astro';
+import OnSaleProducts from '../components/OnSaleProducts.astro';
+import BestSellers from '../components/BestSellers.astro';
+import PopularCategories from '../components/PopularCategories.astro';
+import InfoCons from '../components/InfoCons.astro';
+
+
+
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
+
+const theContentResponse = await fetch(`${REST_WP_URL}/pages?slug=homepage`);
+const theContentData = await theContentResponse.json();
+---
+
+<lasz-page-main>
+  <Hero />
+  <OnSaleProducts />
+  <BestSellers />
+  <PopularCategories />
+  <InfoCons />
+  <Fragment set:html={theContentData[0].content.rendered} />
+  <!-- <Image src={LASZLogo} width={196} height={208} alt="LASZ stack logo" /> -->
+</lasz-page-main>
+
+
+

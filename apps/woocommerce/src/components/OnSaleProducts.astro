@@ -1,0 +1,18 @@
+---
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
+
+const onSaleProductsResponse = await fetch(`${REST_WC_URL}/products?on_sale=true`);
+const onSaleProducts = await onSaleProductsResponse.json();
+
+---
+{onSaleProducts.length > 0 && (
+  <lasz-page-container>
+    <h2>On Sale</h2>
+    <lasz-products>
+      {onSaleProducts.map((product: any) => <lasz-product data={JSON.stringify(product)}></lasz-product>)}
+    </lasz-products>
+  </lasz-page-container>
+)}
+
+

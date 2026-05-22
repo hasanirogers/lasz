@@ -1,0 +1,28 @@
+{
+  "name": "@lasz/woocommerce",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev --host --port 4321",
+    "build": "astro build",
+    "build:analyze": "astro build --analyze",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/lit": "^4.3.0",
+    "@astrojs/node": "^9.5.3",
+    "@supabase/supabase-js": "^2.95.3",
+    "@wordpress/block-library": "^9.43.0",
+    "astro": "^5.17.1",
+    "kemet-ui": "^4.1.0",
+    "lit": "^3.3.2",
+    "lodash-es": "^4.17.23",
+    "zustand": "^5.0.11"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "dotenv": "^17.3.1"
+  }
+}

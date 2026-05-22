@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "business-blocks/kemet-buttons",
+	"version": "0.1.0",
+	"title": "Kemet Buttons",
+	"category": "widgets",
+	"icon": "format-image",
+	"description": "A Kemet Button group.",
+	"supports": {
+		"html": false
+	},
+	"textdomain": "business-blocks",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css"
+}

@@ -1,0 +1,66 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { shopifyQuery, ALL_PRODUCTS_QUERY } from '../../shared/shopify';
+
+interface ProductNode {
+  id: string;
+  title: string;
+  handle: string;
+  featuredImage: {
+    url: string;
+    altText: string
+  };
+  priceRange: {
+    minVariantPrice: {
+      amount: string;
+      currencyCode: string
+    }
+  };
+  variants: {
+    nodes: {
+      id: string
+    }[]
+  };
+}
+
+// Fetch the top 24 products at build time
+const data = await shopifyQuery<{ products: { nodes: ProductNode[] } }>(
+  ALL_PRODUCTS_QUERY,
+  { first: 24 }
+);
+const products = data.products.nodes;
+---
+
+<Layout title="Shop All Products">
+  <main>
+    <h1>Our Collection</h1>
+    <section>
+      {products.map((product) => (
+        <article>
+          {product.featuredImage && (
+            <a href={`/products/${product.handle}`}>
+              <img src={`${product.featuredImage.url}&width=400&height=500&crop=center`} alt={product.featuredImage.altText || product.title} loading="lazy" width="400" height="500" />
+            </a>
+          )}
+          <div>
+            <a href={`/products/${product.handle}`}>
+              <h3>{product.title}</h3>
+            </a>
+            <p>
+              {product.priceRange.minVariantPrice.amount} {product.priceRange.minVariantPrice.currencyCode}
+            </p>
+            <lasz-add-to-cart variant-id={product.variants.nodes[0].id}></lasz-add-to-cart>
+          </div>
+        </article>
+      ))}
+    </section>
+  </main>
+</Layout>
+
+<script>
+  import '../../elements/lasz-add-to-cart/lasz-add-to-cart';
+</script>
+
+<style>
+  /* styles */
+</style>

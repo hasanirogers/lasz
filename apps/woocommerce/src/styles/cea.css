@@ -1,0 +1,664 @@
+kemet-button {
+  white-space: nowrap;
+}
+
+kemet-drawer {
+  --kemet-drawer-color: var(--color-text);
+  --kemet-drawer-background-color: var(--color-white);
+
+  display: block;
+
+  &::part(drawer),
+  &::part(container) {
+    overflow: visible;
+  }
+
+  > [slot="content"] {
+    @media (width > 768px) {
+      display: flex;
+      flex-direction: column;
+    }
+  }
+
+  > [slot="navigation"] aside {
+    a {
+      font-family: 'Poppins', sans-serif;
+      display: block;
+      padding: 1rem 2rem;
+      font-size: 1rem;
+      border-bottom: 1px solid rgba(0,0,0,0.25)
+    }
+
+    ul {
+      display: flex;
+      flex-direction: column;
+      list-style: none;
+      padding: 0;
+      margin: -1rem 0 0 0;
+    }
+
+    h2 {
+      font-size: 2rem;
+      line-height: 1.5;
+    }
+
+    img {
+      max-width: 128px;
+    }
+  }
+}
+
+kemet-carousel {
+  &::part(slides) {
+    padding: 0;
+    border: none;
+  }
+}
+
+kemet-modal {
+  --kemet-modal-content-mobile-padding: 0;
+
+  & > section {
+    width: 100vw;
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 2rem;
+    background-color: var(--color-rich-white);
+  }
+}
+
+kemet-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  border: 0;
+  z-index: 1;
+}
+
+kemet-alert {
+  position: absolute;
+
+  &[opened] {
+    position: static;
+  }
+}
+
+kemet-select {
+  --kemet-select-border: 1px solid var(--color-gray-800);
+}
+
+kemet-tabs {
+  --kemet-tabs-ink-color: var(--color-primary);
+}
+
+kemet-tab {
+  --kemet-tab-color: var(--color-primary);
+}
+
+
+lasz-header {
+  display: none;
+
+  @media (width > 768px) {
+    display: block;
+    padding: 0 1rem;
+
+    a {
+      font-size: 1rem;
+      color: rgb(var(--kemet-color-gray-500));
+    }
+
+    li:not(:last-child)::after {
+      content: '|';
+      color: rgb(var(--kemet-color-gray-300));
+      display: inline-block;
+      margin: 0 1rem;
+    }
+
+    .header {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      align-items: center;
+    }
+  }
+}
+
+lasz-sidebar-header {
+  kemet-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+  }
+}
+
+lasz-nav-top {
+  color: rgb(var(--kemet-color-white));
+  position: sticky;
+  top: 0;
+  z-index: 99;
+
+  a {
+    color: rgb(var(--kemet-color-white));
+    font-size: 1rem;
+    font-weight: bold;
+    transition: all 300ms ease;
+
+    &:hover {
+      border-bottom: 1px solid white;
+    }
+  }
+
+  /* nav > li:before {
+    content: '';
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+    opacity: 0.5;
+  } */
+
+  /* li:has(a[href*=shop])::before {
+    position: relative;
+    top: 2px;
+    background: url('../images/icons/all-categories.svg');
+  }
+
+  li:has(a[href*=cart])::before {
+    position: relative;
+    top: 1px;
+    background: url('../images/icons/bag.svg');
+  }
+
+  li:has(a[href*=wish])::before {
+    position:relative;
+    top: 2px;
+    background: url('../images/icons/heart.svg');
+  }
+
+  li:has(a[href*=checkout])::before {
+    background: url('../images/icons/cart.svg');
+  }
+
+  li:has(a[href*=shop])::after {
+    content: '';
+    display: inline-flex;
+    width: 1rem;
+    height: 1rem;
+    margin-right: 0.5rem;
+    padding-right: 2.5rem;
+    opacity: 0.5;
+    border-right: 1px solid white;
+    background-repeat: no-repeat;
+    background-image: url('../images/icons/chevron-down.svg');
+  } */
+
+  nav {
+    display: none;
+
+    @media screen and (width > 960px) {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      align-items: center;
+    }
+  }
+
+  .sub-menu {
+    position: absolute;
+    margin: 0;
+    padding: 1rem 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(1rem);
+    transition: all 300ms ease;
+    box-shadow: var(--kemet-elevation-layer-3);
+    background: var(--color-white);
+
+    a {
+      color: var(--color-primary);
+      font-weight: bold;
+    }
+
+    li {
+      padding: 1rem 0;
+      margin: 0;
+    }
+
+    li:not(:last-child) {
+      border-bottom: 1px solid var(--color-primary);
+    }
+  }
+}
+
+lasz-nav-categories {
+  display: block;
+  padding: 2rem;
+  width: 100%;
+  max-width: var(--page-width);
+  border: 0;
+  margin-top: 3rem;
+  background-color: var(--color-primary);
+
+  ul {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    list-style: none;
+    max-width: 30%;
+    font-size: 0.9rem;
+  }
+
+  a {
+    display: flex;
+    gap: 1rem;
+  }
+
+  img {
+    width: 96px;
+    height: 96px !important;
+  }
+}
+
+lasz-page-main {
+  display: block;
+  flex: 1;
+
+  a {
+    color: var(--color-link);
+  }
+}
+
+lasz-hero-slide {
+  color: var(--color-white);
+  display: block;
+  position: relative;
+  width: 100dvw;
+  height: 768px;
+
+  h2 {
+    font-size: clamp(2rem, 10vw, 6rem);
+    line-height: 1;
+    font-weight: bold;
+    max-width: 960px;
+  }
+
+  & > * {
+    position: absolute;
+  }
+
+  & > section {
+    width: 100%;
+    max-width: var(--page-width);
+    left: 50%;
+    top: 50%;
+    z-index: 3;
+    padding: 4rem;
+    transform: translate(-50%, -50%);
+
+  }
+
+  & > img {
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    object-fit: cover;
+  }
+
+  & > div {
+    height: 100%;
+    width: 100%;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+}
+
+lasz-account-forms {
+  display: block;
+  padding: 1rem;
+}
+
+lasz-newsletter {
+  padding: 2rem 0;
+  display: grid;
+  gap: 1rem;
+  align-items: center;
+
+  @media (width > 768px) {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  p {
+    margin: 0.5rem 0;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+    line-height: 1.2;
+    font-weight: bold;
+  }
+
+  form {
+    display: block !important;
+    gap: 1rem;
+    height: auto;
+    margin: 0 0 2.5rem 0;
+    padding: 0 !important;
+
+    @include media('>tablet') {
+      display: flex !important;
+      height: 64px;
+      margin: 0;
+    }
+  }
+
+  input {
+    color: var(--color-primary);
+    height: 64px;
+  }
+
+  input[type=email] {
+    width: 28vw;
+    font-size: 1.25rem;
+    padding: 0 1rem !important;
+  }
+
+  input[type=submit] {
+    font-weight: bold;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    padding: 0 2rem !important;
+  }
+
+  > div:not(:first-child) {
+    margin: 0 1rem;
+
+    @include media('>tablet') {
+      margin: 0;
+    }
+  }
+}
+
+lasz-products {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: repeat(4, 1fr);
+  /* grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); */
+}
+
+lasz-popular-categories {
+  display: block;
+  max-width: var(--page-width);
+  margin: 4rem auto;
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  h2 {
+    margin-bottom: 2rem;
+  }
+
+  ul {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    text-align: center;
+  }
+}
+
+lasz-info-cons {
+  display: flex;
+  gap: 2rem;
+  flex-direction: column;
+  margin: 4rem 0;
+
+  @media (width > 768px) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+
+  dl {
+    display: grid;
+    column-gap: 1rem;
+    grid-template-columns: auto 1fr;
+
+    & > div {
+      display: flex;
+      align-items: center;
+      grid-row: span 2;
+    }
+  }
+
+  dt {
+    font-size: 1.25rem;
+    font-weight: bold;
+    display: flex;
+    align-items: flex-end;
+  }
+
+  dd {
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+lasz-breadcrumbs {
+  position: relative;
+  display: block;
+  margin: 3rem auto;
+  max-width: var(--page-width);
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+lasz-footer {
+  font-size: 1.1rem;
+
+  display: flex;
+  gap: 2rem;
+  flex-direction: column;
+  margin: 2rem 0;
+
+  @media (width > 768px) {
+    display: grid;
+    gap: 4vw;
+    padding: 2rem 0;
+    margin: auto;
+    grid-template-columns: 1fr auto auto auto;
+  }
+
+  ul {
+    font-size: 1rem;
+    margin: 2rem 0 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  h3 {
+    font-weight: bold;
+  }
+
+  .company {
+    max-width: 415px;
+
+    h3 {
+      display: flex;
+      gap: 1rem;
+      font-size: 2rem;
+      align-items: flex-end;
+    }
+
+    img {
+      max-height: 64px;
+    }
+  }
+
+  .reach {
+    ul {
+      display: flex;
+      gap: 2rem;
+      flex-direction: column;
+    }
+
+    li {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    a {
+      white-space: nowrap;
+    }
+
+    kemet-icon-bootstrap {
+      color: inherit;
+    }
+  }
+
+  .useful {
+    ul {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem
+    }
+  }
+
+  .social {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .payments {
+    margin-top: 0.5rem;
+
+    li {
+      display: inline-flex;
+      justify-content: center;
+      width: 48px;
+      height: 32px;
+      padding: 2px;
+      border: 1px solid rgb(var(--kemet-color-gray-200));
+    }
+
+    svg {
+      height: 100%;
+    }
+  }
+}
+
+lasz-footer-legal {
+  display: block;
+  text-align: center;
+
+  @media (width > 768px) {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+  }
+
+  ul {
+    font-size: 1rem;
+    display: flex;
+    list-style: none;
+    align-items: center;
+    padding: 0;
+  }
+
+  li:not(:last-child)::after {
+    content: '|';
+    color: rgb(var(--kemet-color-gray-300));
+    display: inline-block;
+    margin: 0 1rem;
+  }
+}
+
+lasz-view-products {
+  display: block;
+  margin: 3rem auto;
+
+  header {
+    position: relative;
+    kemet-field {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+  }
+}
+
+lasz-view-order-received {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6rem 2rem;
+
+  & > div {
+    margin-top: 32px;
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  kemet-button[variant="standard"] {
+    --kemet-button-color: var(--color-white);
+    --kemet-button-background-color: rgb(var(--kemet-color-gray-800));
+  }
+
+  kemet-button[variant="outlined"] {
+    --kemet-button-color: var(--color-gray-800);
+    --kemet-button-border-color: var(--color-gray-800);
+  }
+
+  kemet-icon-bootstrap {
+    color: var(--color-success);
+  }
+}
+
+/* TODO: convert later */
+business-page-container,
+lasz-page-container {
+  display: block;
+
+  > * {
+    max-width: var(--page-width);
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  > h2 {
+    margin-top: 4rem;
+    margin-bottom: 2rem;
+  }
+
+  &:has(lasz-newsletter) {
+    color: var(--color-white);
+    background-color: var(--color-primary);
+  }
+}

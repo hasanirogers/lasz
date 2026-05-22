@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "business-blocks/business-page-container",
+	"version": "0.1.0",
+	"title": "Business Page Container",
+	"category": "widgets",
+	"icon": "format-image",
+	"description": "Adds page width constraint.",
+	"supports": {
+		"html": false
+	},
+	"textdomain": "business-blocks",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css"
+}

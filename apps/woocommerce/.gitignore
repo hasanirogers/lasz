@@ -1,0 +1,7 @@
+node_modules
+node_modules/
+build
+.env
+notes.md
+.vscode
+.wp-env.json

@@ -1,0 +1,37 @@
+---
+interface Props {
+  limit?: number;
+  hideEmpty?: boolean;
+}
+
+const { limit = 6, hideEmpty = false } = Astro.props;
+
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
+
+// popluar = count of items in category
+const categoriesResponse = await fetch(`${REST_WC_URL}/products/categories?per_page=${limit}&orderby=count&order=desc&hide_empty=${hideEmpty}`);
+const allCategories = await categoriesResponse.json();
+
+const categories = allCategories
+  .filter((category: any) => category.id !== 1 && category.slug !== 'uncategorized')
+  .slice(0, 6);
+---
+{categories.length > 0 && (
+  <lasz-page-container>
+    <lasz-popular-categories>
+      <h2>Popular Categories</h2>
+      <ul>
+        {categories.map((category: any) => (
+          <li>
+            <a href={`/products/${category.slug}`}>
+              {category.image && <img src={category.image.src} alt={category.name} />}
+              <h3>{category.name}</h3>
+              <p>{category.count} products</p>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </lasz-popular-categories>
+  </lasz-page-container>
+)}

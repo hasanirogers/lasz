@@ -1,0 +1,17 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 2,
+	"name": "business-blocks/business-map",
+	"version": "0.1.0",
+	"title": "Business Google Maps",
+	"category": "widgets",
+	"icon": "format-image",
+	"description": "A Google Maps block",
+	"supports": {
+		"html": false
+	},
+	"textdomain": "business-blocks",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css"
+}

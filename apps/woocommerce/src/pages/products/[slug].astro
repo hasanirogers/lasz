@@ -1,0 +1,11 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Products from '../../views/Products.astro';
+
+const { slug } = Astro.params;
+
+export const prerender = false;
+---
+
+<Layout>
+	<Products slug={slug} /></Layout>

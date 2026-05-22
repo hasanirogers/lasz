@@ -1,0 +1,63 @@
+---
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
+
+const heroResponse = await fetch(`${REST_WP_URL}/hero?_embed`);
+const heroData = await heroResponse.json();
+
+// Debug: Check what's available in embedded media
+if (heroData.length > 0 && heroData[0]._embedded?.['wp:featuredmedia']?.[0]) {
+  const media = heroData[0]._embedded['wp:featuredmedia'][0];
+  console.log('Media data available:', {
+    source_url: media.source_url,
+    alt_text: media.alt_text,
+    width: media.width,
+    height: media.height,
+    media_details: media.media_details
+  });
+}
+
+const breakponts = {
+  768: { perView: 1 },
+  1280: { perView: 1 },
+};
+
+---
+
+
+<lasz-hero>
+  {heroData.length > 0 && (
+    <kemet-carousel breakpoints={breakponts}>
+      {heroData.length > 1 && (
+        <kemet-carousel-prev slot="prev">
+          <kemet-icon icon="chevron-left" size="72"></kemet-icon>
+        </kemet-carousel-prev>
+      )}
+      {
+        heroData.map((hero: any) => (
+          <kemet-carousel-slide slot="slides">
+            <lasz-hero-slide>
+              <section>
+                <h2 set:html={hero.title.rendered}></h2>
+                <div set:html={hero.content.rendered}></div>
+              </section>
+              <img
+                src={hero._embedded['wp:featuredmedia'][0].source_url}
+                alt={hero._embedded['wp:featuredmedia'][0].alt_text || hero.title.rendered}
+                fetchpriority="high"
+                width={hero._embedded['wp:featuredmedia'][0].width || 2560}
+                height={hero._embedded['wp:featuredmedia'][0].height || 1706}
+              />
+              <div></div>
+            </lasz-hero-slide>
+          </kemet-carousel-slide>
+        ))
+      }
+      {heroData.length > 1 && (
+        <kemet-carousel-next slot="next">
+          <kemet-icon-bootstrap icon="chevron-right" size="72"></kemet-icon-bootstrap>
+        </kemet-carousel-next>
+      )}
+    </kemet-carousel>
+  )}
+</lasz-hero>

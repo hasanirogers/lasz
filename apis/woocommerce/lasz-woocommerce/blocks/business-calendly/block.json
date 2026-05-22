@@ -1,0 +1,12 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "create-block/business-calendly",
+	"version": "0.1.0",
+	"title": "Business Calendly",
+	"category": "widgets",
+	"textdomain": "business-calendly",
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css",
+	"style": "file:./style-index.css"
+}

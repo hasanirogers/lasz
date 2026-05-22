@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Product from '../../views/Product.astro';
+
+const { id } = Astro.params;
+
+export const prerender = false;
+---
+
+<Layout>
+	<Product id={id} />
+</Layout>

@@ -1,0 +1,109 @@
+---
+import type { MenuItem } from '../shared/interfaces';
+
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_CUSTOM_URL = `${API_URL}/wp-json/lasz-woocommerce/v1`;
+
+const siteLogoData = await fetch(`${REST_CUSTOM_URL}/site_logo`);
+const siteLogoFull = (await siteLogoData.json()).full ?? '/logo.webp';
+
+const blogInfoData = await fetch(`${REST_CUSTOM_URL}/bloginfo`);
+const blogInfo = await blogInfoData.json();
+const siteName = blogInfo.name;
+
+const headerMenuResponse = await fetch(`${REST_CUSTOM_URL}/nav/header`);
+const headerMenuData = await headerMenuResponse.json();
+
+const userResponse = await fetch(`${API_URL}/wp-json/wp/v2/users/me`);
+const isLoggedIn = userResponse.ok;
+
+const topMenuResponse = await fetch(`${REST_CUSTOM_URL}/nav/top`);
+const topMenuData = await topMenuResponse.json();
+
+const navCategoriesResponse = await fetch(`${REST_CUSTOM_URL}/nav/categories`);
+const navCategories = await navCategoriesResponse.json();
+
+
+---
+
+<lasz-header
+  logo={siteLogoFull}
+  name={siteName}
+  logged-in={isLoggedIn ? true : null}
+>
+  <nav class="header">
+    {
+      headerMenuData.map((item: MenuItem) => (
+        <a id={`menu-item-${item.id}`} href={item.url}>
+          {item.title}
+        </a>
+      ))
+    }
+  </nav>
+</lasz-header>
+
+<lasz-nav-top>
+  <nav>
+    {
+      navCategories.length > 0 && (
+        <li>
+          <kemet-popper effect="fade" placement="bottom-start">
+            <div slot="trigger">
+              <kemet-icon-bootstrap icon="bag" size="16"></kemet-icon-bootstrap>
+              <a slot="trigger">All Categories</a>
+              <kemet-icon-bootstrap icon="chevron-down" size="16"></kemet-icon-bootstrap>
+            </div>
+            <lasz-nav-categories slot="content">
+              <ul>
+                {
+                  navCategories.map((category: any) => (
+                    <li>
+                      <a href={`/products/${category.slug}`}>
+                        {!!category.thumbnail && <img src={category.thumbnail} alt={category.name} />}
+                        <div>
+                          <h3>{category.name}</h3>
+                          <p>{category.description}</p>
+                        </div>
+                      </a>
+                    </li>
+                  ))
+                }
+              </ul>
+            </lasz-nav-categories>
+          </kemet-popper>
+        </li>
+      )
+    }
+    {
+      topMenuData.map((item: MenuItem) => {
+        let icon;
+        switch (true) {
+          case item.url.includes('/cart'):
+            icon = 'bag';
+            break;
+          case item.url.includes('/wishlist'):
+            icon = 'heart';
+            break;
+          case item.url.includes('/checkout'):
+            icon = 'cart';
+            break;
+          default:
+            icon = 'bag';
+        }
+        return (
+          <li>
+            <kemet-icon-bootstrap icon={icon} size="16"></kemet-icon-bootstrap>
+            &nbsp;<a id={`menu-item-${item.id}`} href={item.url}>{item.title}</a>
+          </li>
+        );
+      })
+    }
+  </nav>
+</lasz-nav-top>
+<style>
+  [slot="trigger"] {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+</style>

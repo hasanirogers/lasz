@@ -1,0 +1,68 @@
+---
+import { shopifyQuery } from '../../shared/shopify';
+import Layout from '../../layouts/Layout.astro';
+
+interface ProductData {
+  product: {
+    id: string;
+    title: string;
+    handle: string;
+    descriptionHtml: string;
+    variants: {
+      nodes: Array<{
+        id: string;
+        price: { amount: string; currencyCode: string; };
+      }>;
+    };
+  };
+}
+
+export async function getStaticPaths() {
+  const data = await shopifyQuery<{ products: { nodes: { handle: string }[] } }>(`
+    {
+      products(first: 100) {
+        nodes { handle }
+      }
+    }
+  `);
+
+  return data.products.nodes.map((product) => ({
+    params: { handle: product.handle },
+    props: { productHandle: product.handle }
+  }));
+}
+
+const { handle } = Astro.params;
+
+const data = await shopifyQuery<ProductData>(`
+  query getProduct($handle: String!) {
+    product(handle: $handle) {
+      id
+      title
+      handle
+      descriptionHtml
+      variants(first: 1) {
+        nodes {
+          id
+          price { amount currencyCode }
+        }
+      }
+    }
+  }
+`, { handle });
+
+const product = data.product;
+const firstVariantId = product.variants.nodes[0].id;
+---
+
+<Layout title={product.title}>
+  <main>
+    <h1>{product.title}</h1>
+    <div set:html={product.descriptionHtml} />
+    <lasz-add-to-cart variant-id={firstVariantId}></lasz-add-to-cart>
+  </main>
+</Layout>
+
+<script>
+  import '../../elements/lasz-add-to-cart/lasz-add-to-cart';
+</script>

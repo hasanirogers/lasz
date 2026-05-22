@@ -1,0 +1,25 @@
+name: deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - name: Build API WooCommerce
+        working-directory: ./apis/woocommerce
+        run: |
+          npm install
+          npm run build
+      - name: Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.API_WOOCOMMERCE_HOST }}
+          username: ${{ secrets.API_WOOCOMMERCE_USER }}
+          password: ${{ secrets.API_WOOCOMMERCE_PASS }}
+          port: ${{ secrets.FTP_DEPLOY_PORT }}
+          local-dir: "./lasz-woocommerce/"
+          server-dir: "./wp-content/themes/lasz-woocommerce/"

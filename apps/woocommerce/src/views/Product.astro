@@ -1,0 +1,50 @@
+---
+const { id } = Astro.props;
+
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
+
+const productsResponse = await fetch(`${REST_WC_URL}/products/${id}`);
+const product = await productsResponse.json();
+
+if (product.variations && product.variations.length > 0) {
+  const variationIds = product.variations.map((v: any) => v.id).join(',');
+
+  // We fetch these IDs specifically to get their full objects (including prices)
+  const hydrateResponse = await fetch(`${REST_WC_URL}/products?include=${variationIds}`);
+  const detailedVariations = await hydrateResponse.json();
+
+  // 3. Map the price data back onto your original variations array
+  product.variations = product.variations.map((v: any) => {
+    const details = detailedVariations.find((dv: any) => dv.id === v.id);
+    return {
+      ...v,
+      prices: details ? details.prices : product.prices, // fallback to parent price
+      price_html: details ? details.price_html : product.price_html
+    };
+  });
+}
+---
+
+<lasz-page-main>
+  {product && (
+    <lasz-breadcrumbs>
+      <nav>
+        <a href="/">Home</a> /
+        <a href={`/products/${product.categories[0].slug}`}>{product.categories[0].name}</a> /
+        <a href={`/product/${product.slug}`}>{product.name}</a>
+      </nav>
+    </lasz-breadcrumbs>
+  )}
+  {product ? (
+    <lasz-product-view data={JSON.stringify(product)}></lasz-product-view>
+  ) : (
+    <div>
+      <h2>Product Not Found</h2>
+      <p>The product with ID {id} could not be found.</p>
+    </div>
+  )}
+</lasz-page-main>
+<script>
+  import '../elements/lasz-product-view';
+</script>

@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = false;
+---
+
+<Layout>
+  <lasz-page-main>
+    <lasz-page-container>
+      <h1>Oh no!</h1>
+      <p>Something is wrong because this page doesn't exist.</p>
+    </lasz-page-container>
+  </lasz-page-main>
+</Layout>
+<style>
+  lasz-page-container {
+    text-align: center;
+    padding: 7rem 2rem;
+  }
+</style>

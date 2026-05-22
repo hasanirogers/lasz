@@ -1,0 +1,83 @@
+---
+const { slug } = Astro.props;
+const searchParams = Astro.url.searchParams;
+
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
+
+const orderBy = searchParams.get('orderby') ?? 'popularity';
+
+const validSortOptions = new Map([
+  ['popularity', 'Popularity'],
+  ['rating', 'Rating'],
+  ['date', 'Latest'],
+  ['price', 'Price'],
+  ['title', 'Title'],
+]);
+
+let sort = 'popularity';
+
+if (Array.from(validSortOptions.keys()).includes(orderBy)) {
+  sort = orderBy;
+}
+
+const categoriesResponse = await fetch(`${REST_WC_URL}/products/categories?slug=${slug}`);
+const categoriesData = await categoriesResponse.json();
+const category = categoriesData.find((cat: any) => cat.slug === slug); // wc loose matches so we need to be string about the slug matching
+
+let products = [];
+
+if (category) {
+  const productsResponse = await fetch(`${REST_WC_URL}/products?category=${category.id}&orderby=${sort}`);
+  products = await productsResponse.json();
+}
+---
+
+<lasz-page-main>
+  <lasz-page-container>
+    <section>
+      {category ? (
+        <lasz-view-products>
+          <header>
+            <h2>{category.name}</h2>
+            <p>{category.description}</p>
+            <kemet-field>
+              <kemet-select slot="input" name="orderby">
+                {Array.from(validSortOptions.entries()).map(([value, label]) => (
+                  <kemet-option label={label} value={value} {...(value === sort && { selected: true })}></kemet-option>
+                ))}
+              </kemet-select>
+            </kemet-field>
+          </header>
+          <hr /><br />
+          {products && products.length > 0 ? (
+            <lasz-products>
+              {products.map((product: any) => <lasz-product key={product.id} data={JSON.stringify(product)}></lasz-product>)}
+            </lasz-products>
+          ) : (
+            <p>No products found in this category.</p>
+          )}
+        </lasz-view-products>
+      ) : (
+        <br />
+        <h2>We couldn't find any items in <strong>{slug}</strong>.</h2>
+      )}
+    </section>
+  </lasz-page-container>
+</lasz-page-main>
+<script>
+  document.querySelector('kemet-select[name="orderby"]')?.addEventListener('kemet-change', (event) => {
+    const select = event.target as HTMLSelectElement;
+    const url = new URL(window.location.href);
+    url.searchParams.set('orderby', select.value);
+    window.location.href = url.href;
+  });
+</script>
+<style>
+  kemet-select {
+    position: absolute;
+    top: -1rem;
+    right: 2rem;
+    min-width: 200px;
+  }
+</style>

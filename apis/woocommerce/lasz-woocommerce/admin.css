@@ -1,0 +1,7 @@
+#menu-posts,
+#menu-comments,
+#menu-appearance,
+.components-panel > :nth-child(2), /* permalinks */
+.components-panel > :nth-child(3) /* categories */ {
+  /* display: none; */
+}

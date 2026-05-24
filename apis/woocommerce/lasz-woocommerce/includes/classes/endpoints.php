@@ -26,6 +26,7 @@ class Endpoints
     add_action('rest_api_init', array(self::class, 'get_nav_categories'));
 
     add_action('rest_api_init', array(self::class, 'get_theme_mods'));
+    add_action('rest_api_init', array(self::class, 'get_order_status'));
   }
 
   public static function add_contact_form() {
@@ -456,6 +457,38 @@ class Endpoints
         }
 
         return new WP_REST_Response($theme_mods, 200);
+      },
+      'permission_callback' => '__return_true',
+    ));
+  }
+
+  public static function get_order_status() {
+    register_rest_route('lasz-woocommerce/v1', 'orders/status', array(
+      'methods' => 'GET',
+      'callback' => function ($request) {
+        $order_id = $request->get_param('order_id');
+        $order = wc_get_order($order_id);
+
+        if (!$order) {
+          return new WP_REST_Response(array('message' => 'Order not found'), 404);
+        }
+
+        // Pull tracking information
+        $tracking_info = array( 'number' => null, 'carrier' => null );
+        $tracking_meta = $order->get_meta( '_wc_shipment_tracking_items' );
+
+        if ( ! empty( $tracking_meta ) && is_array( $tracking_meta ) ) {
+            $tracking_info = array(
+                'number'  => $tracking_meta[0]['tracking_number'] ?? null,
+                'carrier' => $tracking_meta[0]['tracking_provider'] ?? null
+            );
+        }
+
+        return new WP_REST_Response( array(
+          'success'  => true,
+          'status'   => $order->get_status(),
+          'tracking' => $tracking_info,
+        ), 200 );
       },
       'permission_callback' => '__return_true',
     ));

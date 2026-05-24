@@ -1,0 +1,17 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+
+export const prerender = false;
+---
+
+<Layout>
+  <lasz-page-main>
+    <lasz-page-container>
+      <lasz-order-status></lasz-order-status>
+    </lasz-page-container>
+  </lasz-page-main>
+</Layout>
+<script>
+  import '../../../elements/lasz-order-status';
+</script>
+

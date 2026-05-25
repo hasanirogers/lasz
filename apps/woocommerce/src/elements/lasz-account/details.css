@@ -1,0 +1,38 @@
+:host {
+  display: block;
+  padding: 0 2rem;
+}
+
+h2 {
+  margin: 0 2rem 2rem 2rem;
+}
+
+section {
+  display: flex;
+  gap: 2rem;
+  flex-direction: column;
+
+  @media (width > 768px) {
+    flex-direction: row;
+  }
+}
+
+legend {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+fieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+form {
+  flex: 1;
+  padding: 2rem;
+}
+
+[action*="change-password"] {
+  background-color: #fafafa;
+}

@@ -75,12 +75,17 @@ kemet-modal-close {
   z-index: 1;
 }
 
-kemet-alert {
+/* kemet-alert {
   position: absolute;
 
   &[opened] {
     position: static;
   }
+} */
+
+kemet-alert {
+  --kemet-alert-background-color: var(--color-white);
+  z-index: 99;
 }
 
 kemet-select {
@@ -516,7 +521,7 @@ lasz-footer {
   .reach {
     ul {
       display: flex;
-      gap: 2rem;
+      gap: 1rem;
       flex-direction: column;
     }
 

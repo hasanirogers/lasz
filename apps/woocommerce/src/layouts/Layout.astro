@@ -33,6 +33,9 @@ const { title = 'LaszCommerce' } = Astro.props;
         <Footer />
       </section>
     </kemet-drawer>
+    <kemet-alert overlay="top-full" closable>
+      <kemet-icon-bootstrap slot="icon" icon="info-circle" size="24"></kemet-icon-bootstrap>
+    </kemet-alert>
 	</body>
 </html>
 
@@ -57,8 +60,28 @@ const { title = 'LaszCommerce' } = Astro.props;
   import 'kemet-ui/elements/select';
   import 'kemet-ui/elements/option';
   import 'kemet-ui/elements/checkbox';
+
   // app custom elements
   import '../elements/lasz-header';
   import '../elements/lasz-nav-top';
   import '../elements/lasz-product';
+
+  // handle state
+  import alertStore from '../stores/alert';
+  import type HTMLKemetAlertElement from 'kemet-ui/elements/alert.d.ts';
+  import type HTMLKemetIconBootstrapElement from 'kemet-ui/elements/icon-bootstrap.d.ts';
+
+  const alert = document.querySelector('kemet-alert') as HTMLKemetAlertElement;
+  const alertIcon = alert.querySelector('kemet-alert kemet-icon-bootstrap') as HTMLKemetIconBootstrapElement;
+
+  alertStore.subscribe((state) => {
+    if (state.config) {
+      const message = document.createElement('div');
+      message.innerHTML = state.config.message as string;
+      alert.opened = state.config.opened;
+      alert.status = state.config.status as "standard" | "primary" | "success" | "warning" | "error";
+      alertIcon.icon = state.config.icon as string;
+      alert.appendChild(message);
+    }
+  });
 </script>

@@ -10,7 +10,7 @@
     "start": "npm run wp-env:start",
     "wp-env:log": "wp-env logs development",
     "wp-env:path": "wp-env install-path",
-    "wp-env:plugins": "wp-env run cli wp plugin install updraftplus woocommerce",
+    "wp-env:plugins": "wp-env run cli wp plugin install updraftplus woocommerce woocommerce-gateway-stripe wp-mail-smtp jwt-authentication-for-wp-rest-api",
     "wp-env:start": "wp-env start",
     "wp-env:stop": "wp-env stop all",
     "wp-env:reset": "wp-env reset",
@@ -22,10 +22,12 @@
   "author": "Deific Arts LLC contact@deificarts.com",
   "license": "ISC",
   "dependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@wordpress/block-editor": "^15.16.0",
     "@wordpress/blocks": "^15.16.0",
     "@wordpress/element": "^6.43.0",
     "@wordpress/i18n": "^6.16.0",
+    "js-cookie": "^3.0.7",
     "kemet-ui": "^4.1.0",
     "lit": "^3.3.2"
   },

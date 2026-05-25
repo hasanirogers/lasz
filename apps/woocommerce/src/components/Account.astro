@@ -1,0 +1,93 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout>
+  <lasz-page-main>
+    <lasz-page-container>
+      <kemet-tabs divider placement="top" selected="orders">
+        <kemet-tab slot="tab" link="orders">
+          <kemet-icon-bootstrap icon="credit-card" size="24"></kemet-icon-bootstrap>
+          &nbsp;&nbsp;Orders
+        </kemet-tab>
+        <kemet-tab slot="tab" link="downloads">
+          <kemet-icon-bootstrap icon="download" size="24"></kemet-icon-bootstrap>
+          &nbsp;&nbsp;Downloads
+        </kemet-tab>
+        <kemet-tab slot="tab" link="addresses">
+          <kemet-icon-bootstrap icon="geo-alt" size="24"></kemet-icon-bootstrap>
+          &nbsp;&nbsp;Addresses
+        </kemet-tab>
+        <kemet-tab slot="tab" link="payment-methods">
+          <kemet-icon-bootstrap icon="wallet2" size="24"></kemet-icon-bootstrap>
+          &nbsp;&nbsp;Payment Methods
+        </kemet-tab>
+        <kemet-tab slot="tab" link="account-details">
+          <kemet-icon-bootstrap icon="person-circle" size="24"></kemet-icon-bootstrap>
+          &nbsp;&nbsp;Account Details
+        </kemet-tab>
+
+        <kemet-tab-panel slot="panel" panel="orders">
+          <h3>Orders</h3>
+        </kemet-tab-panel>
+
+        <kemet-tab-panel slot="panel" panel="downloads">
+          <h3>Downloads</h3>
+        </kemet-tab-panel>
+
+        <kemet-tab-panel slot="panel" panel="addresses">
+          <lasz-account-addresses></lasz-account-addresses>
+        </kemet-tab-panel>
+
+        <kemet-tab-panel slot="panel" panel="payment-methods">
+          <h3>Payment Methods</h3>
+        </kemet-tab-panel>
+
+        <kemet-tab-panel slot="panel" panel="account-details">
+          <lasz-account-details></lasz-account-details>
+        </kemet-tab-panel>
+      </kemet-tabs>
+    </lasz-page-container>
+  </lasz-page-main>
+</Layout>
+<script>
+  import appStore from '../stores/app';
+  import 'kemet-ui/elements/tabs';
+  import 'kemet-ui/elements/tab';
+  import 'kemet-ui/elements/tab-panel';
+  import type HTMLKemetTabsElement from 'kemet-ui/elements/tabs.d.ts';
+
+  import '../elements/lasz-account/addresses';
+  import '../elements/lasz-account/details';
+
+  let slug = window.location.pathname.split('/').pop();
+
+  const tabs = document.querySelector('kemet-tabs') as HTMLKemetTabsElement;
+  const deepLinkSlugs = ['orders', 'downloads', 'addresses', 'payment-methods', 'account-details'];
+
+  if (slug && deepLinkSlugs.includes(slug)) {
+    tabs.selected = slug;
+  } else {
+    tabs.selected = 'orders';
+  }
+
+  tabs.addEventListener('kemet-change', (event) => {
+    const name = (event as CustomEvent).detail.selectedName;
+    const hasAccountPrefix = window.location.pathname.startsWith('/account');
+    slug = name || 'orders';
+    window.history.pushState({}, '', `${hasAccountPrefix ? '/account' : ''}/${name}`);
+  });
+
+  const appState = appStore.getState();
+  tabs.placement = appState.isMobile ? 'top' : 'left';
+
+  appStore.subscribe((state) => {
+    tabs.placement = state.isMobile ? 'top' : 'left';
+    tabs.selected = slug || 'orders';
+  });
+</script>
+<style>
+  kemet-tabs {
+    margin: 4rem auto;
+  }
+</style>

@@ -26,6 +26,10 @@ import Layout from '../layouts/Layout.astro';
           <kemet-icon-bootstrap icon="person-circle" size="24"></kemet-icon-bootstrap>
           &nbsp;&nbsp;Account Details
         </kemet-tab>
+        <kemet-tab slot="tab" link="logout">
+          <kemet-icon-bootstrap icon="box-arrow-right" size="24"></kemet-icon-bootstrap>
+          &nbsp;&nbsp;<a href="/logout">Logout</a>
+        </kemet-tab>
 
         <kemet-tab-panel slot="panel" panel="orders">
           <h3>Orders</h3>
@@ -40,7 +44,7 @@ import Layout from '../layouts/Layout.astro';
         </kemet-tab-panel>
 
         <kemet-tab-panel slot="panel" panel="payment-methods">
-          <h3>Payment Methods</h3>
+          <lasz-account-payments></lasz-account-payments>
         </kemet-tab-panel>
 
         <kemet-tab-panel slot="panel" panel="account-details">
@@ -59,6 +63,7 @@ import Layout from '../layouts/Layout.astro';
 
   import '../elements/lasz-account/addresses';
   import '../elements/lasz-account/details';
+  import '../elements/lasz-account/payments';
 
   let slug = window.location.pathname.split('/').pop();
 

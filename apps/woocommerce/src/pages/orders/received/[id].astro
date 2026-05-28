@@ -9,14 +9,14 @@ const { id } = Astro.params;
     <lasz-view-order-received>
       <kemet-icon-bootstrap icon="check-circle-fill" size="96"></kemet-icon-bootstrap>
       <h1>Thank You for Your Order!</h1>
-      <p>Order <mark>#{Astro.params.id}</mark> has been received.</p>
+      <p>Order <mark>#{id}</mark> has been received.</p>
       <p>We've sent a confirmation email to your registered email address.</p>
       <div>
         <kemet-button link="/" rounded="lg">
           Continue Shopping
         </kemet-button>
-        <kemet-button link="/orders" rounded="lg" variant="outlined">
-          View My Orders
+        <kemet-button link={`/orders/status?order=${id}`} rounded="lg" variant="outlined">
+          View Order Status
         </kemet-button>
       </div>
     </lasz-view-order-received>

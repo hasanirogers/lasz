@@ -1,5 +1,9 @@
 ---
 import Account from "../../components/Account.astro";
+import Redirect from "../../components/Redirect.astro";
+import Cookies from 'js-cookie';
+
+const isLoggedIn = !!Cookies.get('lasz-user')
 ---
 
-<Account />
+{isLoggedIn ? <Account /> : <Redirect to="/login" />}

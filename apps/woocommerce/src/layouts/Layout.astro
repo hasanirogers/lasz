@@ -76,12 +76,14 @@ const { title = 'LaszCommerce' } = Astro.props;
 
   alertStore.subscribe((state) => {
     if (state.config) {
+      alert.innerHTML = '';
       const message = document.createElement('div');
       message.innerHTML = state.config.message as string;
       alert.opened = state.config.opened;
       alert.status = state.config.status as "standard" | "primary" | "success" | "warning" | "error";
       alertIcon.icon = state.config.icon as string;
       alert.appendChild(message);
+      alert.appendChild(alertIcon);
     }
   });
 </script>

@@ -5,8 +5,10 @@ export interface IUserStore {
   user: any;
   profile: any;
   addresses: any;
+  paymentMethods: any[];
   updateProfile: (profile: any) => void;
   updateAddresses: (addresses: any) => void;
+  updatePaymentMethods: (paymentMethods: any[]) => void;
   isLoggedIn: boolean;
   login: (loginData: any) => void;
   logout: () => void;
@@ -55,7 +57,7 @@ const getAddresses = async () => {
   };
 
   try {
-    const customerData = await fetch(`${API_URL}/wp-json/wc/v3/customers/${user.user_id.toString()}`, options)
+    const customerData = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/customer/data`, options)
       .then((response) => response.json());
 
     if (customerData) {
@@ -73,15 +75,52 @@ const getAddresses = async () => {
   return { addresses: { billing: {}, shipping: {} } };
 }
 
+const getPaymentMethods = async () => {
+  const user = Cookies.get('lasz-user') ? JSON.parse(Cookies.get('lasz-user') || '') : undefined;
+
+  if (!user) {
+    return;
+  }
+
+  const options = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user.token}`
+    }
+  };
+
+  try {
+    // Try WooCommerce Payments endpoint first
+    const response = await fetch(`${API_URL}/wp-json/wc/v3/payments/customers/${user.user_id.toString()}/payment_methods`, options);
+
+    if (response.ok) {
+      const paymentMethodsData = await response.json();
+      if (paymentMethodsData) {
+        return { paymentMethods: paymentMethodsData };
+      }
+    } else {
+      console.warn('WooCommerce Payments endpoint not available');
+    }
+  } catch (error) {
+    console.error('Failed to fetch payment methods:', error);
+  }
+
+  return { paymentMethods: [] };
+}
+
 const profileResponse = await getProfile();
 const addressesResponse = await getAddresses();
+const paymentMethodsResponse = await getPaymentMethods();
 
 const store = createStore<IUserStore>(set => ({
   user: Cookies.get('lasz-user') ? JSON.parse(Cookies.get('lasz-user') || '') : {},
   profile: profileResponse?.profile,
   addresses: addressesResponse?.addresses || { billing: {}, shipping: {} },
+  paymentMethods: paymentMethodsResponse?.paymentMethods || [],
   updateProfile: (profile: any) => set(() => { return { profile } }),
   updateAddresses: (addresses: any) => set(() => { return { addresses } }),
+  updatePaymentMethods: (paymentMethods: any[]) => set(() => { return { paymentMethods } }),
   isLoggedIn: !!Cookies.get('lasz-user'),
   login: (loginData) => set(() => {
     Cookies.set('lasz-user', JSON.stringify(loginData), { expires: 7 });

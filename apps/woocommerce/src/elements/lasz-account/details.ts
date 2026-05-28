@@ -90,7 +90,7 @@ export class LaszAccountDetails extends LitElement {
           </fieldset>
         </form>
 
-        <form method="post" action="wp-json/bob/v1/change-password" @submit=${(event: SubmitEvent) => this.changePassword(event)}>
+        <form method="post" action="wp-json/lasz-woocommerce/v1/change-password" @submit=${(event: SubmitEvent) => this.changePassword(event)}>
           <fieldset>
             <legend>Change Password</legend>
             <p>

@@ -1,10 +1,13 @@
 import { LitElement, html, unsafeCSS } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import styles from './styles.css?inline';
 
 @customElement('lasz-order-status')
 export class LaszOrderStatus extends LitElement {
   static styles = [unsafeCSS(styles)];
+
+  @property()
+  private order: string = '';
 
   @state()
   private status: string | null = null;
@@ -12,16 +15,28 @@ export class LaszOrderStatus extends LitElement {
   @state()
   private message: string | null = null;
 
+  @query('kemet-button')
+  private button!: HTMLElement;
+
+  firstUpdated() {
+    if (this.order) {
+      setTimeout(() => {
+        this.button.click();
+      }, 100);
+    }
+  }
+
   render() {
     return html`
       <form @submit=${this.handleSubmit}>
-        <kemet-field slug="order_id" label="Please enter an order ID below">
+        <kemet-field slug="order" label="Please enter an order ID below">
           <kemet-input
             required
             slot="input"
-            name="order_id"
+            name="order"
             validate-on-blur
             status
+            .value=${this.order}
           ></kemet-input>
         </kemet-field>
         <kemet-button type="submit">Get Order Status</kemet-button>
@@ -35,16 +50,16 @@ export class LaszOrderStatus extends LitElement {
 
     const form = event.target as HTMLFormElement;
     const formData = new FormData(form);
-    const orderId = formData.get('order_id') as string;
+    const order = formData.get('order') as string;
 
-    if (!orderId) {
+    if (!order) {
       console.error('Order ID is missing.');
       this.message = 'Order ID is required.';
       return;
     }
 
     try {
-      const orderResponse = await fetch(`/api/orders/${orderId}`);
+      const orderResponse = await fetch(`/api/orders/${order}`);
 
       if (!orderResponse.ok) {
         this.message = 'Order not found.';
@@ -53,7 +68,7 @@ export class LaszOrderStatus extends LitElement {
 
       const orderData = await orderResponse.json();
       this.status = orderData.status;
-      this.message = `Order ${orderId} is ${orderData.status}.`;
+      this.message = `Order ${order} is ${orderData.status}.`;
     } catch (error) {
       console.error(error);
       this.message = 'Error fetching order status';

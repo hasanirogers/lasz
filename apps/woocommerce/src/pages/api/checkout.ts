@@ -46,6 +46,7 @@ export const POST: APIRoute = async ({ request }) => {
       billing_address,
       shipping_address,
       customer_note: customer_note || '',
+      save_payment_method: true,
       payment_method: 'stripe', // The Gateway ID
       payment_data: [
         // 1. Identifies the gateway again for internal routing

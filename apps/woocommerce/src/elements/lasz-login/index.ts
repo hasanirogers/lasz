@@ -102,7 +102,7 @@ export class LaszLogin extends LitElement {
           <kemet-tab slot="tab">Register</kemet-tab>
           <kemet-tab slot="tab">Forgot Password</kemet-tab>
           <kemet-tab-panel slot="panel">
-            <form method="post" action="wp-json/jwt-auth/v1/token" @submit=${(event: SubmitEvent) => this.handleLogin(event)}>
+            <form method="post" action="wp-json/jwt-auth/v1/token" @submit=${(event: SubmitEvent) => this.handleLogin(event)} novalidate>
               <p>
                 <kemet-field label="Username">
                   <kemet-input required slot="input" name="username" rounded validate-on-blur></kemet-input>
@@ -120,7 +120,7 @@ export class LaszLogin extends LitElement {
             </form>
           </kemet-tab-panel>
           <kemet-tab-panel slot="panel">
-            <form method="post" action="wp-json/bob/v1/register" @submit=${(event: SubmitEvent) => this.handleRegistration(event)}>
+            <form method="post" action="wp-json/lasz-woocommerce/v1/register" @submit=${(event: SubmitEvent) => this.handleRegistration(event)} novalidate>
               <kemet-field slug="user_name" label="Username" message="A valid username is required">
                 <kemet-input required slot="input" name="user_name" validate-on-blur></kemet-input>
               </kemet-field>
@@ -259,6 +259,7 @@ export class LaszLogin extends LitElement {
           }
 
           this.fetchLogin(credentials);
+          window.location.href = '/account';
         }
       })
       .catch(() => {
@@ -354,7 +355,7 @@ export class LaszLogin extends LitElement {
   makeForgotPassword() {
     if (this.forgotStatus === 'enter-code') {
       return html`
-        <form method="post" action="wp-json/bdpwr/v1/set-password" @submit=${(event: SubmitEvent) => this.handleNewPassword(event)}>
+        <form method="post" action="wp-json/bdpwr/v1/set-password" @submit=${(event: SubmitEvent) => this.handleNewPassword(event)} novalidate>
           <kemet-input name="email" type="hidden" value=${this.resetEmail}></kemet-input>
           <br />
           <kemet-field slug="code" label="Enter the code your received via email" message="A code is required">

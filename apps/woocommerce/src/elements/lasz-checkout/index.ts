@@ -2,6 +2,7 @@ import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { ZustandController } from '../../controllers/zustand';
 import cartStore, { type CartStore } from '../../stores/cart';
+import userStore, { type IUserStore } from '../../stores/user';
 import { usStates } from '../../shared/data';
 import styles from './styles.css?inline';
 
@@ -45,6 +46,12 @@ interface CheckoutForm {
 @customElement('lasz-checkout')
 export class LaszCheckout extends LitElement {
   static styles = [unsafeCSS(styles)];
+
+  private userController: ZustandController<IUserStore, {
+    addresses: IUserStore['addresses'],
+  }, {
+    //
+  }>;
 
   private cartController: ZustandController<CartStore, {
     items: CartStore['items'];
@@ -117,6 +124,18 @@ export class LaszCheckout extends LitElement {
 
   constructor() {
     super();
+
+    this.userController = new ZustandController(
+      this,
+      userStore,
+      (state) => ({
+        addresses: state.addresses,
+      }),
+      (state) => ({
+        //
+      })
+    );
+
     this.cartController = new ZustandController(
       this,
       cartStore,
@@ -159,6 +178,7 @@ export class LaszCheckout extends LitElement {
     this.cartController.actions?.fetchCart();
     this.initializeStripe();
     this.loadPaymentMethods();
+    this.initializeBillingData();
   }
 
   render() {
@@ -205,6 +225,31 @@ export class LaszCheckout extends LitElement {
         </form>
       </lasz-checkout-container>
     `;
+  }
+
+  private initializeBillingData() {
+    console.log(this.userController.data);
+    this.formData = {
+      ...this.formData,
+      billing_first_name: this.userController.data.addresses.billing.first_name || '',
+      billing_last_name: this.userController.data.addresses.billing.last_name || '',
+      billing_email: this.userController.data.addresses.billing.email || '',
+      billing_phone: this.userController.data.addresses.billing.phone || '',
+      billing_address_1: this.userController.data.addresses.billing.address_1 || '',
+      billing_address_2: this.userController.data.addresses.billing.address_2 || '',
+      billing_city: this.userController.data.addresses.billing.city || '',
+      billing_state: this.userController.data.addresses.billing.state || '',
+      billing_postcode: this.userController.data.addresses.billing.postcode || '',
+      billing_country: this.userController.data.addresses.billing.country || '',
+      shipping_first_name: this.userController.data.addresses.shipping.first_name || '',
+      shipping_last_name: this.userController.data.addresses.shipping.last_name || '',
+      shipping_address_1: this.userController.data.addresses.shipping.address_1 || '',
+      shipping_address_2: this.userController.data.addresses.shipping.address_2 || '',
+      shipping_city: this.userController.data.addresses.shipping.city || '',
+      shipping_state: this.userController.data.addresses.shipping.state || '',
+      shipping_postcode: this.userController.data.addresses.shipping.postcode || '',
+      shipping_country: this.userController.data.addresses.shipping.country || '',
+    };
   }
 
   private initializeStripe() {
@@ -260,15 +305,15 @@ export class LaszCheckout extends LitElement {
     }
   }
 
-  private handleInputChange(event: CustomEvent) {
-    const element = event.detail.element ?? event.detail;
-    const isCheckbox = element.tagName === 'KEMET-CHECKBOX';
-    const { name, value } = element;
+  private handleInputChange(event: Event | CustomEvent) {
+    const element = (event as CustomEvent).detail?.element ?? (event as Event).target;
+    const isCheckbox = element?.tagName === 'KEMET-CHECKBOX';
+    const { name, value } = element as any;
 
     if (isCheckbox) {
       this.formData = {
         ...this.formData,
-        [name]: element.checked
+        [name]: (element as any).checked
       };
     } else {
      this.formData = {
@@ -386,15 +431,12 @@ export class LaszCheckout extends LitElement {
           country: this.formData.billing_country
         },
         customer_note: this.formData.customer_note,
-        // payment_method: this.formData.payment_method,
         // Hardcode payment method to stripe for now
         payment_method: 'stripe',
         payment_data: await this.getPaymentData(),
         // Send this specifically for your Astro route to catch
         payment_method_id: stripePMId
       };
-
-      console.log('Payment data being sent:', checkoutData.payment_data);
 
       // Use the local API proxy to avoid CORS issues
       const response = await fetch('/api/checkout', {
@@ -930,11 +972,11 @@ export class LaszCheckout extends LitElement {
           : ''
         }
 
-        <br /><br />
-
+        <br />
         <kemet-button type="submit" rounded="lg" ?disabled=${this.isProcessing}>
           ${this.isProcessing ? 'Processing...' : 'Place Order'}
         </kemet-button>
+        <br />&nbsp;
       </lasz-checkout-payment>
     `;
   }

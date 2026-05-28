@@ -20,9 +20,10 @@ export default class LaszNewsletterForm extends LitElement {
             slot="input"
             type="email"
             name="email"
+            rounded="lg"
             placeholder="Enter your email"
+            filled
             required
-            validate-on-blur
           />
         </kemet-field>
         <kemet-field slug="firstname" label="Your First Name">
@@ -30,9 +31,10 @@ export default class LaszNewsletterForm extends LitElement {
             slot="input"
             type="text"
             name="firstname"
+            rounded="lg"
             placeholder="Enter your first name"
+            filled
             required
-            validate-on-blur
           />
         </kemet-field>
         <kemet-button type="submit" rounded="lg">

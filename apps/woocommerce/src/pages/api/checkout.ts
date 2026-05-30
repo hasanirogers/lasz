@@ -13,7 +13,8 @@ export const POST: APIRoute = async ({ request }) => {
       billing_address,
       shipping_address,
       payment_method_id, // Ensure your frontend passes the 'pm_...' ID here
-      customer_note
+      customer_note,
+      user_token // JWT token for authenticated users
     } = body;
 
     if (!cart_token) {
@@ -21,8 +22,13 @@ export const POST: APIRoute = async ({ request }) => {
     }
 
     // 1. Fetch current cart to get a fresh Nonce
+    const cartHeaders: HeadersInit = { 'Cart-Token': cart_token };
+    if (user_token) {
+      cartHeaders['Authorization'] = `Bearer ${user_token}`;
+    }
+
     const cartResponse = await fetch(`${PUBLIC_API_URL}/wp-json/wc/store/v1/cart`, {
-      headers: { 'Cart-Token': cart_token }
+      headers: cartHeaders
     });
 
     if (!cartResponse.ok) {
@@ -46,7 +52,7 @@ export const POST: APIRoute = async ({ request }) => {
       billing_address,
       shipping_address,
       customer_note: customer_note || '',
-      save_payment_method: true,
+      save_payment_method: !!user_token, // Only save if user is authenticated
       payment_method: 'stripe', // The Gateway ID
       payment_data: [
         // 1. Identifies the gateway again for internal routing
@@ -67,13 +73,19 @@ export const POST: APIRoute = async ({ request }) => {
     };
 
     // 3. One-shot Checkout
+    const checkoutHeaders: HeadersInit = {
+      'Content-Type': 'application/json',
+      'Cart-Token': cart_token,
+      'X-WC-Store-API-Nonce': nonce // Official standard header name
+    };
+
+    if (user_token) {
+      checkoutHeaders['Authorization'] = `Bearer ${user_token}`;
+    }
+
     const response = await fetch(`${PUBLIC_API_URL}/wp-json/wc/store/v1/checkout`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cart-Token': cart_token,
-        'X-WC-Store-API-Nonce': nonce // Official standard header name
-      },
+      headers: checkoutHeaders,
       body: JSON.stringify(checkoutData)
     });
 

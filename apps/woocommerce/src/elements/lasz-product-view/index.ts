@@ -2,7 +2,7 @@ import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, queryAll, state } from 'lit/decorators.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import styles from './styles.css?inline';
-import sharedStyles from '../../shared/styles.css?inline';
+import sharedStyles from '../../styles/elements.css?inline';
 import { ZustandController } from '../../controllers/zustand';
 import cartStore, { type CartStore } from '../../stores/cart';
 

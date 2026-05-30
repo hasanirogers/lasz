@@ -1,14 +1,16 @@
 import { html, LitElement, unsafeCSS } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
+import { customElement, query, state } from 'lit/decorators.js';
 import { ZustandController } from '../../controllers/zustand';
 import cartStore, { type CartStore } from '../../stores/cart';
 import userStore, { type IUserStore } from '../../stores/user';
+import alertStore, { type IAlertStore } from '../../stores/alert';
 import { usStates } from '../../shared/data';
 import styles from './styles.css?inline';
 
 import 'kemet-ui/elements/tabs';
 import 'kemet-ui/elements/tab';
 import 'kemet-ui/elements/tab-panel';
+import type { ICredentials } from '../lasz-login';
 
 
 interface CheckoutForm {
@@ -32,6 +34,8 @@ interface CheckoutForm {
   shipping_country: string;
   customer_note: string;
   payment_method: string;
+  create_account: boolean;
+  user_pass: string;
   ship_to_different_address: boolean;
   card_number: string;
   card_expiry: string;
@@ -43,14 +47,19 @@ interface CheckoutForm {
   payment_details: string;
 }
 
+const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL || 'https://woocommerce.deificarts.com';
+
 @customElement('lasz-checkout')
 export class LaszCheckout extends LitElement {
   static styles = [unsafeCSS(styles)];
 
   private userController: ZustandController<IUserStore, {
     addresses: IUserStore['addresses'],
+    isLoggedIn: IUserStore['isLoggedIn'],
+    user: IUserStore['user'],
   }, {
-    //
+    updateProfile: IUserStore['updateProfile'],
+    login: IUserStore['login'],
   }>;
 
   private cartController: ZustandController<CartStore, {
@@ -68,6 +77,12 @@ export class LaszCheckout extends LitElement {
     getCurrencySymbol: CartStore['getCurrencySymbol']
   }>;
 
+  private alertController: ZustandController<IAlertStore, {
+    config: IAlertStore['config'],
+  }, {
+    setConfig: IAlertStore['setConfig'],
+  }>
+
   @state()
   private formData: CheckoutForm = {
     billing_first_name: '',
@@ -79,7 +94,7 @@ export class LaszCheckout extends LitElement {
     billing_city: '',
     billing_state: '',
     billing_postcode: '',
-    billing_country: '',
+    billing_country: 'US',
     shipping_first_name: '',
     shipping_last_name: '',
     shipping_address_1: '',
@@ -90,6 +105,8 @@ export class LaszCheckout extends LitElement {
     shipping_country: 'US',
     customer_note: '',
     payment_method: 'stripe',
+    create_account: false,
+    user_pass: '',
     ship_to_different_address: false,
     card_number: '',
     card_expiry: '',
@@ -122,6 +139,9 @@ export class LaszCheckout extends LitElement {
   @state()
   private cardElement: any = null;
 
+  @query('[action="api/checkout"]')
+  private checkoutForm!: HTMLFormElement;
+
   constructor() {
     super();
 
@@ -130,9 +150,12 @@ export class LaszCheckout extends LitElement {
       userStore,
       (state) => ({
         addresses: state.addresses,
+        isLoggedIn: state.isLoggedIn,
+        user: state.user
       }),
       (state) => ({
-        //
+        updateProfile: state.updateProfile,
+        login: state.login
       })
     );
 
@@ -153,6 +176,17 @@ export class LaszCheckout extends LitElement {
         getShippingCost: state.getShippingCost,
         getTaxCost: state.getTaxCost,
         getCurrencySymbol: state.getCurrencySymbol
+      })
+    );
+
+    this.alertController = new ZustandController(
+      this,
+      alertStore,
+      (state) => ({
+        config: state.config
+      }),
+      (state) => ({
+        setConfig: state.setConfig
       })
     );
   }
@@ -217,7 +251,7 @@ export class LaszCheckout extends LitElement {
 
     return html`
       <lasz-checkout-container>
-        <form @submit=${this.handleSubmit}>
+        <form method="post" action="api/checkout" @submit=${this.handleSubmit}>
           <section>
             ${this.makeDetails()}
             ${this.makeSummary()}
@@ -228,7 +262,6 @@ export class LaszCheckout extends LitElement {
   }
 
   private initializeBillingData() {
-    console.log(this.userController.data);
     this.formData = {
       ...this.formData,
       billing_first_name: this.userController.data.addresses.billing.first_name || '',
@@ -240,7 +273,7 @@ export class LaszCheckout extends LitElement {
       billing_city: this.userController.data.addresses.billing.city || '',
       billing_state: this.userController.data.addresses.billing.state || '',
       billing_postcode: this.userController.data.addresses.billing.postcode || '',
-      billing_country: this.userController.data.addresses.billing.country || '',
+      billing_country: this.userController.data.addresses.billing.country || 'US',
       shipping_first_name: this.userController.data.addresses.shipping.first_name || '',
       shipping_last_name: this.userController.data.addresses.shipping.last_name || '',
       shipping_address_1: this.userController.data.addresses.shipping.address_1 || '',
@@ -248,7 +281,7 @@ export class LaszCheckout extends LitElement {
       shipping_city: this.userController.data.addresses.shipping.city || '',
       shipping_state: this.userController.data.addresses.shipping.state || '',
       shipping_postcode: this.userController.data.addresses.shipping.postcode || '',
-      shipping_country: this.userController.data.addresses.shipping.country || '',
+      shipping_country: this.userController.data.addresses.shipping.country || 'US',
     };
   }
 
@@ -325,6 +358,97 @@ export class LaszCheckout extends LitElement {
     console.log('Form data updated:', this.formData);
   }
 
+  async handleLogin(credentials: ICredentials) {
+    const options = {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+      headers: { 'Content-Type': 'application/json' }
+    };
+
+    const tokenResponse = await fetch(`${PUBLIC_API_URL}/wp-json/jwt-auth/v1/token`, options);
+    const tokenResponseData = await tokenResponse.json();
+
+    // bad access
+    if (tokenResponseData.data?.status === 403) {
+      console.log('bad access');
+      this.alertController.actions?.setConfig({
+        status: 'error',
+        message: tokenResponseData.message,
+        opened: true,
+        icon: 'exclamation-circle'
+      });
+    }
+
+    // success
+    if (tokenResponseData.token) {
+      const options = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${tokenResponseData.token}`
+        }
+      };
+      const userProfile = await fetch(`${PUBLIC_API_URL}/wp-json/wp/v2/users/${tokenResponseData.user_id.toString()}?context=edit`, options).then((response) => response.json());
+      this.userController.actions?.updateProfile(userProfile);
+      this.userController.actions?.login(tokenResponseData);
+    }
+  }
+
+  async handleRegistration() {
+    const formData = new FormData(this.checkoutForm);
+    const options = {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user_name: formData.get('billing_email'),
+        user_pass: formData.get('user_pass'),
+        user_email: formData.get('billing_email')
+      })
+    };
+
+    const registerResponse = await fetch(`${PUBLIC_API_URL}/wp-json/lasz-woocommerce/v1/register`, options);
+    const responseData = await registerResponse.json();
+
+    if (!registerResponse.ok) {
+      this.alertController.actions?.setConfig({
+        status: 'error',
+        message: 'An error was encountered while registering.',
+        opened: true,
+        icon: 'exclamation-circle'
+      });
+    }
+
+    if (responseData.status === 'error') {
+      if (responseData.data.errors.existing_user_login) {
+        this.alertController.actions?.setConfig({
+          status: 'error',
+          message: 'That username is already taken!',
+          opened: true,
+          icon: 'exclamation-circle'
+        });
+      }
+
+      if (responseData.data.errors.existing_user_email) {
+        this.alertController.actions?.setConfig({
+          status: 'error',
+          message: 'Email is registered with another user!',
+          opened: true,
+          icon: 'exclamation-circle'
+        });
+      }
+    }
+
+    if (responseData.status === 'ok') {
+      this.handleLogin({
+        username: responseData.data['user_name'],
+        password: responseData.data['user_pass'],
+      });
+    }
+  }
+
   private async handleSubmit(event: Event) {
     event.preventDefault();
     this.isProcessing = true;
@@ -333,17 +457,10 @@ export class LaszCheckout extends LitElement {
     try {
       const cartState = this.cartController.data;
       const cartStoreState = cartStore.getState();
-      const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL || 'https://woocommerce.deificarts.com';
-
-      console.log('Checkout - Cart state:', {
-        itemsCount: cartState.items.length,
-        hasCartToken: !!cartStoreState.cartToken,
-        cartToken: cartStoreState.cartToken ? `${cartStoreState.cartToken.substring(0, 8)}...` : null,
-        isLoading: cartState.isLoading
-      });
 
       // Get cart token from store or fetch it if missing
       let cartToken = cartStoreState.cartToken;
+
       if (!cartToken) {
         // Try to get cart token from localStorage as fallback
         const storedToken = typeof localStorage !== 'undefined' ? localStorage.getItem('lasz-cart-token') : null;
@@ -394,6 +511,11 @@ export class LaszCheckout extends LitElement {
           return;
       }
 
+      // handle regisration
+      if (this.formData.create_account) {
+        await this.handleRegistration();
+      }
+
       const checkoutData = {
         cart_token: cartToken,
         billing_address: {
@@ -435,10 +557,11 @@ export class LaszCheckout extends LitElement {
         payment_method: 'stripe',
         payment_data: await this.getPaymentData(),
         // Send this specifically for your Astro route to catch
-        payment_method_id: stripePMId
+        payment_method_id: stripePMId,
+        // Include JWT token if user is logged in
+        user_token: this.userController.data.isLoggedIn ? this.userController.data.user?.token : null
       };
 
-      // Use the local API proxy to avoid CORS issues
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
@@ -517,110 +640,8 @@ export class LaszCheckout extends LitElement {
     }
   }
 
-  // private renderPaymentDetails() {
-  //   const paymentMethod = this.formData.payment_method;
 
-  //   // Handle Stripe payment methods dynamically
-  //   if (paymentMethod?.startsWith('stripe')) {
-  //     return this.renderStripePaymentDetails(paymentMethod);
-  //   }
-
-  //   // Handle legacy hardcoded methods
-  //   if (paymentMethod === 'woocommerce_payments') {
-  //     return html`
-  //       <div class="payment-details-section">
-  //         <h4>Card Details</h4>
-  //         <div class="form-group">
-  //           <label for="card_number">Card Number *</label>
-  //           <input
-  //             type="text"
-  //             id="card_number"
-  //             name="card_number"
-  //             placeholder="1234 5678 9012 3456"
-  //             maxlength="19"
-  //             @input=${this.handleInputChange}
-  //             required
-  //           />
-  //         </div>
-  //         <div class="form-row">
-  //           <div class="form-group">
-  //             <label for="card_expiry">Expiry Date *</label>
-  //             <input
-  //               type="text"
-  //               id="card_expiry"
-  //               name="card_expiry"
-  //               placeholder="MM/YY"
-  //               maxlength="5"
-  //               @input=${this.handleInputChange}
-  //               required
-  //             />
-  //           </div>
-  //           <div class="form-group">
-  //             <label for="card_cvc">CVC *</label>
-  //             <input
-  //               type="text"
-  //               id="card_cvc"
-  //               name="card_cvc"
-  //               placeholder="123"
-  //               maxlength="4"
-  //               @input=${this.handleInputChange}
-  //               required
-  //             />
-  //           </div>
-  //         </div>
-  //         <div class="form-group">
-  //           <label for="card_name">Name on Card *</label>
-  //           <input
-  //             type="text"
-  //             id="card_name"
-  //             name="card_name"
-  //             placeholder="John Doe"
-  //             @input=${this.handleInputChange}
-  //             required
-  //           />
-  //         </div>
-  //       </div>
-  //     `;
-  //   }
-
-  //   if (paymentMethod === 'paypal') {
-  //     return html`
-  //       <div class="payment-details-section">
-  //         <h4>PayPal</h4>
-  //         <p>You will be redirected to PayPal to complete your payment after placing the order.</p>
-  //         <div class="paypal-notice">
-  //           <p><strong>Note:</strong> Make sure you have a PayPal account or can pay with credit/debit card through PayPal.</p>
-  //         </div>
-  //       </div>
-  //     `;
-  //   }
-
-  //   if (paymentMethod === 'cod') {
-  //     return html`
-  //       <div class="payment-details-section">
-  //         <h4>Cash on Delivery</h4>
-  //         <p>Pay with cash when your order is delivered.</p>
-  //         <div class="cod-notice">
-  //           <p><strong>Please have the exact amount ready:</strong> ${this.cartController.data ? this.cartController.actions?.getCurrencySymbol() || '$' : '$'}${this.cartController.actions?.getTotal() || '0.00'}</p>
-  //         </div>
-  //       </div>
-  //     `;
-  //   }
-
-  //   // Generic fallback for unknown payment methods
-  //   if (paymentMethod) {
-  //     return html`
-  //       <div class="payment-details-section">
-  //         <h4>${paymentMethod.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</h4>
-  //         <p>You will be redirected to complete your payment after placing the order.</p>
-  //       </div>
-  //     `;
-  //   }
-
-  //   return html``;
-  // }
-
-  private renderPaymentDetails(paymentMethod: string) {
+  private makePaymentDetails(paymentMethod: string) {
     console.log('Rendering payment details for:', paymentMethod);
 
     if (paymentMethod === 'stripe') {
@@ -732,7 +753,7 @@ export class LaszCheckout extends LitElement {
               name="shipping_state"
               rounded="md"
               .value=${this.formData.shipping_state}
-              @kemet-input=${this.handleInputChange}
+              @kemet-change=${this.handleInputChange}
             >
               ${usStates.map(state => html`
                 <kemet-option value=${state.value} label=${state.label}></kemet-option>
@@ -759,15 +780,34 @@ export class LaszCheckout extends LitElement {
     return html`
       <lasz-checkout-details>
         ${this.makeBilling()}
-        <kemet-checkbox
-          label="Ship to a different address?"
-          name="ship_to_different_address"
-          .checked=${this.formData.ship_to_different_address}
-          @kemet-change=${this.handleInputChange}
-        ></kemet-checkbox>
+        ${this.userController.data.isLoggedIn
+          ? ''
+          : html`<kemet-checkbox label="Use billing details to save an account?" name="create_account" .checked=${this.formData.create_account} @kemet-change=${this.handleInputChange}></kemet-checkbox><br />`
+        }
+        ${this.formData.create_account ? this.makePassword() : ''}
+        <kemet-checkbox label="Ship to a different address?" name="ship_to_different_address" .checked=${this.formData.ship_to_different_address} @kemet-change=${this.handleInputChange}></kemet-checkbox>
         ${this.formData.ship_to_different_address ? this.makeShipping() : ''}
         ${this.makePaymentMethod()}
       </lasz-checkout-details>
+    `;
+  }
+
+  private makePassword() {
+    return html`
+      <p>
+        <kemet-field label="Please create a password *" slug="user_pass">
+          <kemet-input
+            slot="input"
+            ?required=${this.formData.create_account}
+            type="password"
+            name="user_pass"
+            rounded="md"
+            .value=${this.formData.user_pass}
+            @kemet-input=${this.handleInputChange}
+          ></kemet-input>
+          <kemet-password slot="component"></kemet-password>
+        </kemet-field>
+      </p>
     `;
   }
 
@@ -871,19 +911,19 @@ export class LaszCheckout extends LitElement {
             name="billing_state"
             rounded="md"
             .value=${this.formData.billing_state}
-            @kemet-input=${this.handleInputChange}
+            @kemet-change=${this.handleInputChange}
           >
             ${usStates.map(state => html`
               <kemet-option value=${state.value} label=${state.label}></kemet-option>
             `)}
           </kemet-select>
         </kemet-field>
-        <kemet-field label="Zipcode *" slug="billing_zipcode">
+        <kemet-field label="Zipcode *" slug="billing_postcode">
           <kemet-input
             required
             validate-on-blur
             slot="input"
-            name="billing_zipcode"
+            name="billing_postcode"
             rounded="md"
             .value=${this.formData.billing_postcode}
             @kemet-input=${this.handleInputChange}
@@ -952,7 +992,7 @@ export class LaszCheckout extends LitElement {
         <h3>Payment Method</h3>
         <kemet-tabs divider>
           ${this.paymentMethods.map(method => html`<kemet-tab slot="tab">${method.title}</kemet-tab>`)}
-          ${this.paymentMethods.map(method => html`<kemet-tab-panel slot="panel">${this.renderPaymentDetails(method.id)}</kemet-tab-panel>`)}
+          ${this.paymentMethods.map(method => html`<kemet-tab-panel slot="panel">${this.makePaymentDetails(method.id)}</kemet-tab-panel>`)}
         </kemet-tabs>
 
         <br /><br />

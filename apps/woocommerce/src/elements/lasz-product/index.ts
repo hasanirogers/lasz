@@ -1,7 +1,7 @@
 import { html, unsafeCSS, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import styles from './styles.css?inline';
-import sharedStyles from '../../shared/styles.css?inline';
+import sharedStyles from '../../styles/elements.css?inline';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 @customElement('lasz-product')

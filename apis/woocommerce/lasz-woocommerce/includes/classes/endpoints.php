@@ -25,6 +25,9 @@ class Endpoints
     add_action('rest_api_init', array(self::class, 'get_theme_mods'));
     add_action('rest_api_init', array(self::class, 'get_order_status'));
     add_action('rest_api_init', array(self::class, 'get_customer_data'));
+    add_action('rest_api_init', array(self::class, 'get_payment_methods'));
+    add_action('rest_api_init', array(self::class, 'set_default_payment_method'));
+    add_action('rest_api_init', array(self::class, 'get_customer_orders'));
   }
 
   public static function add_contact_form() {
@@ -62,80 +65,6 @@ class Endpoints
       }
     ));
   }
-
-  // public static function add_profile_image()
-  // {
-  //   register_rest_route('lasz-woocommerce/v1', 'profile-image', array(
-  //     'methods' => 'POST',
-  //     'callback' => function ($request) {
-  //       $image_src = $request->get_param('image_src');
-  //       $image_id = $request->get_param('image_id');
-  //       $user_id = $request->get_param('user_id');
-  //       $user = get_user_by('id', $user_id);
-
-  //       if (empty($user)) {
-  //         return new WP_Error('error', 'User does not exist', array('status' => 400));
-  //       }
-
-  //       if (empty($user)) {
-  //         return new WP_Error('error', 'image source is empty', array('status' => 400));
-  //       }
-
-  //       update_user_meta($user_id, 'lasz_woocommerce_profile_image', $image_src);
-  //       update_user_meta($user_id, 'lasz_woocommerce_profile_image_id', $image_id);
-
-  //       return new WP_REST_Response(array(
-  //         'status' => 'success',
-  //         'user_id' => $user_id,
-  //         'image_src' => $image_src,
-  //         "message" => "Profile image uploaded successfully"
-  //       ), 200);
-  //     },
-  //     'permission_callback' => '__return_true',
-  //   ));
-  // }
-
-  // public static function add_media_upload()
-  // {
-  //   register_rest_route('lasz-woocommerce/v1', 'media-upload', array(
-  //     'methods' => 'POST',
-  //     'callback' => function ($request) {
-  //       return get_class()::upload_file();
-  //     }
-  //   ));
-  // }
-
-  // public static function add_media_delete()
-  // {
-  //   register_rest_route('lasz-woocommerce/v1', 'media-delete', array(
-  //     'methods' => 'POST',
-  //     'callback' => function ($request) {
-  //       $user_id = $request->get_param('user_id');
-  //       $image_id = $request->get_param('image_id');
-
-  //       $media_post = get_post($image_id);
-
-  //       if (empty($media_post)) {
-  //         return new WP_Error('error', 'Could not find the media to delete.', array('status' => 400));
-  //       }
-
-  //       if (gettype($user_id) !== 'string') {
-  //         return new WP_Error('error', 'User ID must be a present.', array('status' => 400));
-  //       }
-
-  //       if ($media_post->post_author !== $user_id) {
-  //         return new WP_Error('error', 'User does not have permission to delete this image' . $media_post->post_author, array('status' => 403));
-  //       }
-
-  //       wp_delete_attachment($image_id, true);
-
-  //       return new WP_REST_Response(array(
-  //         'status' => 'success',
-  //         "message" => "Media has been deleted."
-  //       ), 200);
-  //     }
-  //   ));
-  // }
 
   public static function add_change_password()
   {
@@ -517,6 +446,183 @@ class Endpoints
       'permission_callback' => function () {
         return is_user_logged_in();
       },
+    ));
+  }
+
+  public static function get_payment_methods() {
+    register_rest_route('lasz-woocommerce/v1', 'customer/payment-methods', array(
+      'methods' => 'GET',
+      'callback' => function ($request) {
+        // Check if WooCommerce is active
+        if (!class_exists('WooCommerce')) {
+          return new WP_REST_Response(array('message' => 'WooCommerce is not active'), 503);
+        }
+
+        $current_user_id = get_current_user_id();
+
+        if (!$current_user_id) {
+          return new WP_REST_Response(array('message' => 'User not authenticated'), 401);
+        }
+
+        // Get Stripe customer ID from user meta
+        $stripe_customer_id = get_user_meta($current_user_id, '_stripe_customer_id', true);
+
+        // Debug: Log what we find
+        error_log('Payment Methods Debug - User ID: ' . $current_user_id);
+        error_log('Payment Methods Debug - Stripe Customer ID: ' . ($stripe_customer_id ?: 'not found'));
+
+        // Check if WC_Payment_Tokens class exists
+        if (!class_exists('\WC_Payment_Tokens')) {
+          error_log('Payment Methods Debug - WC_Payment_Tokens class does not exist');
+          return new WP_REST_Response(array('payment_methods' => array()), 200);
+        }
+
+        // Try to get all payment tokens (not just stripe)
+        try {
+          $all_tokens = \WC_Payment_Tokens::get_customer_tokens($current_user_id);
+          error_log('Payment Methods Debug - All tokens count: ' . count($all_tokens));
+
+          // Get saved payment methods from WooCommerce (Stripe plugin stores them as tokens)
+          $payment_methods = \WC_Payment_Tokens::get_customer_tokens($current_user_id, 'stripe');
+          error_log('Payment Methods Debug - Stripe tokens count: ' . count($payment_methods));
+
+          // If no stripe tokens, try 'wc_stripe' as gateway ID
+          if (empty($payment_methods)) {
+            $payment_methods = \WC_Payment_Tokens::get_customer_tokens($current_user_id, 'wc_stripe');
+            error_log('Payment Methods Debug - WC Stripe tokens count: ' . count($payment_methods));
+          }
+
+          $formatted_methods = array();
+
+          foreach ($payment_methods as $token) {
+            $formatted_methods[] = array(
+              'id' => $token->get_id(),
+              'token' => $token->get_token(),
+              'type' => $token->get_type(),
+              'brand' => $token->get_card_type(),
+              'last4' => $token->get_last4(),
+              'expiry_month' => $token->get_expiry_month(),
+              'expiry_year' => $token->get_expiry_year(),
+              'is_default' => $token->is_default(),
+            );
+          }
+
+          error_log('Payment Methods Debug - Formatted methods: ' . json_encode($formatted_methods));
+
+          return new WP_REST_Response(array('payment_methods' => $formatted_methods), 200);
+        } catch (Exception $e) {
+          error_log('Payment Methods Debug - Exception: ' . $e->getMessage());
+          return new WP_REST_Response(array('message' => 'Error fetching payment methods: ' . $e->getMessage()), 500);
+        }
+      },
+      'permission_callback' => function () {
+        return is_user_logged_in();
+      },
+    ));
+  }
+
+  public static function set_default_payment_method() {
+    register_rest_route('lasz-woocommerce/v1', 'customer/payment-methods/(?P<token_id>\d+)/set-default', array(
+      'methods' => 'PUT',
+      'callback' => function ($request) {
+        $current_user_id = get_current_user_id();
+
+        if (!$current_user_id) {
+          error_log('Set Default Payment Method: User not authenticated');
+          return new WP_REST_Response(array('message' => 'User not authenticated', 'debug' => 'No current user ID found'), 401);
+        }
+
+        $token_id = $request->get_param('token_id');
+        error_log('Set Default Payment Method - Token ID: ' . $token_id . ', User ID: ' . $current_user_id);
+
+        if (!class_exists('\WC_Payment_Tokens')) {
+          error_log('Set Default Payment Method: WC_Payment_Tokens class not available');
+          return new WP_REST_Response(array('message' => 'WooCommerce payment tokens not available', 'debug' => 'WC_Payment_Tokens class does not exist'), 503);
+        }
+
+        try {
+          $token = \WC_Payment_Tokens::get($token_id);
+
+          if (!$token) {
+            error_log('Set Default Payment Method: Token not found for ID ' . $token_id);
+            return new WP_REST_Response(array('message' => 'Payment method not found', 'debug' => 'Token ID ' . $token_id . ' does not exist'), 404);
+          }
+
+          error_log('Set Default Payment Method - Token found, User ID: ' . $token->get_user_id() . ', Type: ' . $token->get_type());
+
+          // Verify the token belongs to the current user
+          if ($token->get_user_id() != $current_user_id) {
+            error_log('Set Default Payment Method: Token user ID mismatch');
+            return new WP_REST_Response(array('message' => 'Unauthorized', 'debug' => 'Token belongs to user ID ' . $token->get_user_id() . ', but current user is ' . $current_user_id), 403);
+          }
+
+          // Set as default and save
+          $token->set_default(true);
+          $result = $token->save();
+          error_log('Set Default Payment Method - token->save result: ' . ($result ? 'true' : 'false'));
+
+          if ($result) {
+            return new WP_REST_Response(array('message' => 'Payment method set as default'), 200);
+          } else {
+            error_log('Set Default Payment Method: token->save returned false');
+            return new WP_REST_Response(array('message' => 'Failed to set default payment method', 'debug' => 'token->save() returned false for token ID ' . $token_id), 500);
+          }
+        } catch (Exception $e) {
+          error_log('Set Default Payment Method Exception: ' . $e->getMessage());
+          return new WP_REST_Response(array('message' => 'Error setting default payment method', 'debug' => $e->getMessage()), 500);
+        }
+      },
+      'permission_callback' => '__return_true',
+    ));
+  }
+
+  public static function get_customer_orders() {
+    register_rest_route('lasz-woocommerce/v1', 'customer/orders', array(
+      'methods' => 'GET',
+      'callback' => function ($request) {
+        $current_user_id = get_current_user_id();
+
+        if (!$current_user_id) {
+          return new WP_REST_Response(array('message' => 'User not authenticated'), 401);
+        }
+
+        if (!class_exists('WooCommerce')) {
+          return new WP_REST_Response(array('message' => 'WooCommerce is not active'), 503);
+        }
+
+        try {
+          $args = array(
+            'customer_id' => $current_user_id,
+            'limit' => -1,
+          );
+
+          $orders = wc_get_orders($args);
+
+          if (empty($orders)) {
+            return new WP_REST_Response(array('orders' => array()), 200);
+          }
+
+          $formatted_orders = array();
+
+          foreach ($orders as $order) {
+            $formatted_orders[] = array(
+              'id' => $order->get_id(),
+              'number' => $order->get_order_number(),
+              'status' => $order->get_status(),
+              'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'),
+              'total' => $order->get_total(),
+              'currency' => $order->get_currency(),
+              'currency_symbol' => html_entity_decode(get_woocommerce_currency_symbol($order->get_currency())),
+            );
+          }
+
+          return new WP_REST_Response(array('orders' => $formatted_orders), 200);
+        } catch (Exception $e) {
+          error_log('Get Customer Orders Error: ' . $e->getMessage());
+          return new WP_REST_Response(array('message' => 'Error fetching orders: ' . $e->getMessage()), 500);
+        }
+      },
+      'permission_callback' => '__return_true',
     ));
   }
 }

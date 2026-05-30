@@ -13,7 +13,7 @@ import 'kemet-ui/elements/tab-panel';
 import styles from './styles.css?inline';
 
 
-interface ICredentials {
+export interface ICredentials {
   username: string;
   password: string;
 }

@@ -124,6 +124,8 @@ if (!class_exists('lasz_woocommerce\Theme')) {
       $endpoints[] = '/wp-json/bdpwr/v1/reset-password';
       $endpoints[] = '/wp-json/bdpwr/v1/set-password';
       $endpoints[] = '/wp-json/bdpwr/v1/validate-code';
+      $endpoints[] = '/wp-json/lasz-woocommerce/v1/customer/payment-methods';
+      $endpoints[] = '/wp-json/lasz-woocommerce/v1/customer/orders';
       return $endpoints;
     }
 

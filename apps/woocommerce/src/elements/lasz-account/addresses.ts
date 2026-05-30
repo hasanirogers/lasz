@@ -106,7 +106,7 @@ export class LaszAccountAddresses extends LitElement {
           ${address.phone ? html`<p>${address.phone}</p>` : ''}
         ` : ''}
       </address>
-      <kemet-button @click=${() => type === 'billing' ? this.isEditingBilling = true : this.isEditingShipping = true}>
+      <kemet-button rounded="lg" @click=${() => type === 'billing' ? this.isEditingBilling = true : this.isEditingShipping = true}>
         Edit ${type === 'billing' ? 'Billing' : 'Shipping'} Address
       </kemet-button>
     `;

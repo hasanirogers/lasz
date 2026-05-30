@@ -74,7 +74,8 @@ export class LaszCheckout extends LitElement {
     getSubtotal: CartStore['getSubtotal'],
     getShippingCost: CartStore['getShippingCost'],
     getTaxCost: CartStore['getTaxCost'],
-    getCurrencySymbol: CartStore['getCurrencySymbol']
+    getCurrencySymbol: CartStore['getCurrencySymbol'],
+    clearCart: CartStore['clearCart']
   }>;
 
   private alertController: ZustandController<IAlertStore, {
@@ -175,7 +176,8 @@ export class LaszCheckout extends LitElement {
         getSubtotal: state.getSubtotal,
         getShippingCost: state.getShippingCost,
         getTaxCost: state.getTaxCost,
-        getCurrencySymbol: state.getCurrencySymbol
+        getCurrencySymbol: state.getCurrencySymbol,
+        clearCart: state.clearCart
       })
     );
 
@@ -404,6 +406,8 @@ export class LaszCheckout extends LitElement {
       },
       body: JSON.stringify({
         user_name: formData.get('billing_email'),
+        user_first_name: formData.get('billing_first_name'),
+        user_last_name: formData.get('billing_last_name'),
         user_pass: formData.get('user_pass'),
         user_email: formData.get('billing_email')
       })
@@ -573,7 +577,10 @@ export class LaszCheckout extends LitElement {
       const result = await response.json();
 
       if (response.ok && result.order_id) {
-        window.location.href = `/orders/received/${result.order_id}`;
+        this.cartController.actions?.clearCart();
+        setTimeout(() => {
+          window.location.href = `/orders/received/${result.order_id}`;
+        }, 1);
       } else {
         this.checkoutError = result.message || 'Checkout failed. Please try again.';
       }

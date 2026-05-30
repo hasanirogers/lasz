@@ -6,6 +6,7 @@ import alertStore, { type IAlertStore } from '../../stores/alert';
 import styles from './details.css?inline';
 
 import type HTMLKemetInputElement from 'kemet-ui/elements/input.d.ts';
+import type HTMLKemetPasswordElement from 'kemet-ui/elements/password.d.ts';
 
 const API_URL = import.meta.env.PUBLIC_API_URL;
 
@@ -209,6 +210,16 @@ export class LaszAccountDetails extends LitElement {
               message: responseData.message,
               icon: 'check-circle',
               opened: true
+            });
+
+            const passwordElement = this.changePasswordForm.querySelector('kemet-password');
+
+            if (passwordElement) {
+              (passwordElement as HTMLKemetPasswordElement).show = false;
+            }
+
+            this.changePasswordForm.querySelectorAll('kemet-input').forEach((input) => {
+              input.value = '';
             });
           }
         })

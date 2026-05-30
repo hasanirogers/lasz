@@ -87,6 +87,12 @@ import Layout from '../layouts/Layout.astro';
   const appState = appStore.getState();
   tabs.placement = appState.isMobile ? 'top' : 'left';
   tabs.overflow = appState.isMobile;
+  tabs.selectTab();
+  tabs.selectPanel();
+
+  setTimeout(() => {
+    tabs.handleResize();
+  }, 1000);
 
   appStore.subscribe((state) => {
     tabs.placement = state.isMobile ? 'top' : 'left';
@@ -112,7 +118,7 @@ import Layout from '../layouts/Layout.astro';
   }
 
   [link=logout] {
-    width: 100%;
+    width: calc(100% + 1.5rem);
     padding: 0.5rem 1rem;
     display: flex;
     justify-content: flex-start;
@@ -126,6 +132,10 @@ import Layout from '../layouts/Layout.astro';
       &:hover {
         border: 0;
       }
+    }
+
+    @media (width > 1024px) {
+      margin-top: 3rem;
     }
   }
 

@@ -26,7 +26,7 @@ class Endpoints
     add_action('rest_api_init', array(self::class, 'get_order_status'));
     add_action('rest_api_init', array(self::class, 'get_customer_data'));
     add_action('rest_api_init', array(self::class, 'get_payment_methods'));
-    add_action('rest_api_init', array(self::class, 'set_default_payment_method'));
+    add_action('rest_api_init', array(self::class, 'delete_payment_method'));
     add_action('rest_api_init', array(self::class, 'get_customer_orders'));
   }
 
@@ -42,12 +42,25 @@ class Endpoints
         $userData = wp_create_user($request->get_param('user_name'), $request->get_param('user_pass'), $request->get_param('user_email'));
 
         if (is_int($userData)) {
+          // Save first name and last name as user meta
+          $first_name = $request->get_param('user_first_name');
+          $last_name = $request->get_param('user_last_name');
+
+          if ($first_name) {
+            update_user_meta($userData, 'first_name', $first_name);
+          }
+          if ($last_name) {
+            update_user_meta($userData, 'last_name', $last_name);
+          }
+
           return array(
             'status' => 'ok',
             'message' => 'Successfully created ' . $request->get_param('user_name') . '.',
             'data' => array(
               'user_id' => $userData,
               'user_name' => $request->get_param('user_name'),
+              'user_first_name' => $request->get_param('user_first_name'),
+              'user_last_name' => $request->get_param('user_last_name'),
               'user_email' => $request->get_param('user_email'),
               'user_pass' => $request->get_param('user_pass'),
             )
@@ -521,22 +534,22 @@ class Endpoints
     ));
   }
 
-  public static function set_default_payment_method() {
-    register_rest_route('lasz-woocommerce/v1', 'customer/payment-methods/(?P<token_id>\d+)/set-default', array(
-      'methods' => 'PUT',
+  public static function delete_payment_method() {
+    register_rest_route('lasz-woocommerce/v1', 'customer/payment-methods/(?P<token_id>\d+)', array(
+      'methods' => 'DELETE',
       'callback' => function ($request) {
         $current_user_id = get_current_user_id();
 
         if (!$current_user_id) {
-          error_log('Set Default Payment Method: User not authenticated');
+          error_log('Delete Payment Method: User not authenticated');
           return new WP_REST_Response(array('message' => 'User not authenticated', 'debug' => 'No current user ID found'), 401);
         }
 
         $token_id = $request->get_param('token_id');
-        error_log('Set Default Payment Method - Token ID: ' . $token_id . ', User ID: ' . $current_user_id);
+        error_log('Delete Payment Method - Token ID: ' . $token_id . ', User ID: ' . $current_user_id);
 
         if (!class_exists('\WC_Payment_Tokens')) {
-          error_log('Set Default Payment Method: WC_Payment_Tokens class not available');
+          error_log('Delete Payment Method: WC_Payment_Tokens class not available');
           return new WP_REST_Response(array('message' => 'WooCommerce payment tokens not available', 'debug' => 'WC_Payment_Tokens class does not exist'), 503);
         }
 
@@ -544,32 +557,31 @@ class Endpoints
           $token = \WC_Payment_Tokens::get($token_id);
 
           if (!$token) {
-            error_log('Set Default Payment Method: Token not found for ID ' . $token_id);
+            error_log('Delete Payment Method: Token not found for ID ' . $token_id);
             return new WP_REST_Response(array('message' => 'Payment method not found', 'debug' => 'Token ID ' . $token_id . ' does not exist'), 404);
           }
 
-          error_log('Set Default Payment Method - Token found, User ID: ' . $token->get_user_id() . ', Type: ' . $token->get_type());
+          error_log('Delete Payment Method - Token found, User ID: ' . $token->get_user_id() . ', Type: ' . $token->get_type());
 
           // Verify the token belongs to the current user
           if ($token->get_user_id() != $current_user_id) {
-            error_log('Set Default Payment Method: Token user ID mismatch');
+            error_log('Delete Payment Method: Token user ID mismatch');
             return new WP_REST_Response(array('message' => 'Unauthorized', 'debug' => 'Token belongs to user ID ' . $token->get_user_id() . ', but current user is ' . $current_user_id), 403);
           }
 
-          // Set as default and save
-          $token->set_default(true);
-          $result = $token->save();
-          error_log('Set Default Payment Method - token->save result: ' . ($result ? 'true' : 'false'));
+          // Delete the token
+          $result = $token->delete();
+          error_log('Delete Payment Method - token->delete result: ' . ($result ? 'true' : 'false'));
 
           if ($result) {
-            return new WP_REST_Response(array('message' => 'Payment method set as default'), 200);
+            return new WP_REST_Response(array('message' => 'Payment method deleted successfully'), 200);
           } else {
-            error_log('Set Default Payment Method: token->save returned false');
-            return new WP_REST_Response(array('message' => 'Failed to set default payment method', 'debug' => 'token->save() returned false for token ID ' . $token_id), 500);
+            error_log('Delete Payment Method: token->delete returned false');
+            return new WP_REST_Response(array('message' => 'Failed to delete payment method', 'debug' => 'token->delete() returned false for token ID ' . $token_id), 500);
           }
         } catch (Exception $e) {
-          error_log('Set Default Payment Method Exception: ' . $e->getMessage());
-          return new WP_REST_Response(array('message' => 'Error setting default payment method', 'debug' => $e->getMessage()), 500);
+          error_log('Delete Payment Method Exception: ' . $e->getMessage());
+          return new WP_REST_Response(array('message' => 'Error deleting payment method', 'debug' => $e->getMessage()), 500);
         }
       },
       'permission_callback' => '__return_true',

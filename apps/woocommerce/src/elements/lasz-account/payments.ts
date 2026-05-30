@@ -125,7 +125,7 @@ export class LaszAccountPayments extends LitElement {
 
     try {
       const response = await fetch(
-        `${API_URL}/wp-json/wc/v3/customers/${this.userController.data.user.user_id.toString()}/payment_methods/${method.id}`,
+        `${API_URL}/wp-json/lasz-woocommerce/v1/customer/payment-methods/${method.id}`,
         {
           ...options,
           method: 'DELETE'

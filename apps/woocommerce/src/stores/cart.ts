@@ -373,34 +373,14 @@ const store = createStore<CartStore>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const { cartToken, nonce } = get();
-      const headers: Record<string, string> = {};
-
-      if (cartToken) {
-        headers['Cart-Token'] = cartToken;
-      }
-
-      if (nonce) {
-        headers['X-WC-Store-API-Nonce'] = nonce;
-      }
-
-      const response = await fetch(`${PUBLIC_API_URL}/wp-json/wc/store/v1/cart/clear`, {
-        method: 'POST',
-        headers,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to clear cart');
-      }
-
+      // Clear cart locally without API call
       set({
         items: [],
         total: '0',
-        cartToken,
         isLoading: false
       });
 
-      // Clear localStorage after successful API call
+      // Clear localStorage
       clearCartFromStorage();
     } catch (error) {
       set({

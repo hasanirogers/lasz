@@ -9,32 +9,39 @@ class Endpoints
 {
   public static function init()
   {
-    add_action('rest_api_init', array(self::class, 'add_contact_form'));
+    // forms
+    // add_action('rest_api_init', array(self::class, 'add_form_contact'));
 
+    // user
     add_action('rest_api_init', array(self::class, 'add_user_registration'));
     add_action('rest_api_init', array(self::class, 'add_user_password'));
 
+    // navigation
     add_action('rest_api_init', array(self::class, 'get_nav_header'));
     add_action('rest_api_init', array(self::class, 'get_nav_top'));
     add_action('rest_api_init', array(self::class, 'get_nav_legal'));
     add_action('rest_api_init', array(self::class, 'get_nav_useful_links'));
     add_action('rest_api_init', array(self::class, 'get_nav_categories'));
 
+    // theme
     add_action('rest_api_init', array(self::class, 'get_theme_logo'));
     add_action('rest_api_init', array(self::class, 'get_theme_mods'));
     add_action('rest_api_init', array(self::class, 'get_theme_info'));
 
+    // orders
     add_action('rest_api_init', array(self::class, 'get_order_status'));
 
+    // customers
     add_action('rest_api_init', array(self::class, 'get_customer'));
+    add_action('rest_api_init', array(self::class, 'get_customer_by_id'));
     add_action('rest_api_init', array(self::class, 'get_customer_orders'));
     add_action('rest_api_init', array(self::class, 'get_customer_payment_methods'));
     add_action('rest_api_init', array(self::class, 'delete_customer_payment_method'));
 
   }
 
-  public static function add_contact_form() {
-    register_rest_route('lasz-woocommerce/v1', 'forms/contact', array(
+  public static function add_form_contact() {
+    register_rest_route('lasz-woocommerce/v1', 'form/contact', array(
       'methods' => 'POST',
       'callback' => function ($request) {
         $files = $request->get_file_params();
@@ -460,6 +467,68 @@ class Endpoints
 
         return new WP_REST_Response(array(
           'id' => $customer->get_id(),
+          'billing' => $customer->get_billing(),
+          'shipping' => $customer->get_shipping(),
+        ), 200);
+      },
+      'permission_callback' => function () {
+        return is_user_logged_in();
+      },
+    ));
+  }
+
+  public static function get_customer_by_id() {
+    register_rest_route('lasz-woocommerce/v1', 'customer/(?P<id>\d+)', array(
+      'methods' => array('GET', 'PUT'),
+      'callback' => function ($request) {
+        $customer_id = $request->get_param('id');
+        $method = $request->get_method();
+
+        if (!$customer_id) {
+          return new WP_REST_Response(array('message' => 'Customer ID is missing'), 400);
+        }
+
+        $customer = new \WC_Customer($customer_id);
+
+        if (!$customer || !$customer->get_id()) {
+          return new WP_REST_Response(array('message' => 'Customer not found'), 404);
+        }
+
+        if ($method === 'PUT') {
+          $body = $request->get_json_params();
+
+          if (isset($body['billing'])) {
+            foreach ($body['billing'] as $key => $value) {
+              $customer->update_meta_data('billing_' . $key, $value);
+            }
+          }
+
+          if (isset($body['shipping'])) {
+            foreach ($body['shipping'] as $key => $value) {
+              $customer->update_meta_data('shipping_' . $key, $value);
+            }
+          }
+
+          if (isset($body['first_name'])) {
+            $customer->set_first_name($body['first_name']);
+          }
+
+          if (isset($body['last_name'])) {
+            $customer->set_last_name($body['last_name']);
+          }
+
+          if (isset($body['email'])) {
+            $customer->set_email($body['email']);
+          }
+
+          $customer->save();
+        }
+
+        return new WP_REST_Response(array(
+          'id' => $customer->get_id(),
+          'email' => $customer->get_email(),
+          'first_name' => $customer->get_first_name(),
+          'last_name' => $customer->get_last_name(),
           'billing' => $customer->get_billing(),
           'shipping' => $customer->get_shipping(),
         ), 200);

@@ -380,7 +380,7 @@ export class LaszCheckout extends LitElement {
       headers: { 'Content-Type': 'application/json' }
     };
 
-    const tokenResponse = await fetch(`${PUBLIC_API_URL}/wp-json/jwt-auth/v1/token`, options);
+    const tokenResponse = await fetch(`/api/user/token`, options);
     const tokenResponseData = await tokenResponse.json();
 
     // bad access
@@ -403,7 +403,7 @@ export class LaszCheckout extends LitElement {
           'Authorization': `Bearer ${tokenResponseData.token}`
         }
       };
-      const userProfile = await fetch(`${PUBLIC_API_URL}/wp-json/wp/v2/users/${tokenResponseData.user_id.toString()}?context=edit`, options).then((response) => response.json());
+      const userProfile = await fetch(`/api/user/${tokenResponseData.user_id.toString()}`, options).then((response) => response.json());
       this.userController.actions?.updateProfile(userProfile);
       this.userController.actions?.login(tokenResponseData);
     }
@@ -426,7 +426,7 @@ export class LaszCheckout extends LitElement {
       })
     };
 
-    const registerResponse = await fetch(`${PUBLIC_API_URL}/wp-json/lasz-woocommerce/v1/user/register`, options);
+    const registerResponse = await fetch(`/api/user/register`, options);
     const responseData = await registerResponse.json();
 
     if (!registerResponse.ok) {

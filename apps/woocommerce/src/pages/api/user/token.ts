@@ -17,13 +17,12 @@ export const POST: APIRoute = async ({ request }) => {
       body: JSON.stringify(body)
     };
 
-
-    const response = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/user/password`, options);
+    const response = await fetch(`${API_URL}/wp-json/jwt-auth/v1/token`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       console.error('User API error:', responseData);
-      return new Response(JSON.stringify({ message: responseData.message || 'Failed to create password.' }), { status: responseData.data.status || 400 });
+      return new Response(JSON.stringify({ message: responseData.message || 'Failed to get token.' }), { status: responseData.data.status || 400 });
     }
 
     return new Response(JSON.stringify(responseData), { status: 200 });

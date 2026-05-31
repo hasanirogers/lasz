@@ -21,12 +21,12 @@ export const GET: APIRoute = async ({ params, request }) => {
       return new Response(JSON.stringify({ message: 'Customer ID is missing.' }), { status: 400 });
     }
 
-    const response = await fetch(`${API_URL}/wp-json/wc/v3/customers/${id}`, options);
+    const response = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/customer/${id}`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       console.error('Customer API error:', responseData);
-      return new Response(JSON.stringify({ message: responseData.message || 'Failed to fetch customer data.' }), { status: responseData.data.status || 400 });
+      return new Response(JSON.stringify({ message: responseData.message || 'Failed to fetch customer data.' }), { status: response.status || 400 });
     }
 
     return new Response(JSON.stringify(responseData), { status: 200 });
@@ -54,12 +54,12 @@ export const PUT: APIRoute = async ({ params, request }) => {
       return new Response(JSON.stringify({ message: 'Customer ID is missing.' }), { status: 400 });
     }
 
-    const response = await fetch(`${API_URL}/wp-json/wc/v3/customers/${id}`, options);
+    const response = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/customer/${id}`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       console.error('Customer API error:', responseData);
-      return new Response(JSON.stringify({ message: responseData.message || 'Failed to update customer data.' }), { status: responseData.data.status || 400 });
+      return new Response(JSON.stringify({ message: responseData.message || 'Failed to update customer data.' }), { status: response.status || 400 });
     }
 
     return new Response(JSON.stringify(responseData), { status: 200 });

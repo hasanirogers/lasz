@@ -2,10 +2,10 @@ import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { ZustandController } from '../../controllers/zustand';
 import cartStore, { type CartStore } from '../../stores/cart';
-import styles from './styles.css?inline';
+import styles from './index.css?inline';
 
-import '../lasz-cart-item';
-import '../lasz-cart-summary';
+import './item';
+import './summary';
 
 
 @customElement('lasz-cart')

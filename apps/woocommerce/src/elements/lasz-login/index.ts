@@ -46,16 +46,16 @@ export class LaszLogin extends LitElement {
   @state()
   resetPassword: string = '';
 
-  @query('form[action*=jwt-auth]')
+  @query('form#login')
   loginForm!: HTMLFormElement;
 
-  @query('form[action*=register]')
+  @query('form#register')
   registerForm!: HTMLFormElement;
 
-  @query('form[action*=reset]')
+  @query('form#resetpass')
   resetForm!: HTMLFormElement;
 
-  @query('form[action*=set-password]')
+  @query('form#setpass')
   setPasswordForm!: HTMLFormElement;
 
   @query('[name=username]')
@@ -102,7 +102,7 @@ export class LaszLogin extends LitElement {
           <kemet-tab slot="tab">Register</kemet-tab>
           <kemet-tab slot="tab">Forgot Password</kemet-tab>
           <kemet-tab-panel slot="panel">
-            <form method="post" action="wp-json/jwt-auth/v1/token" @submit=${(event: SubmitEvent) => this.handleLogin(event)} novalidate>
+            <form id="login" @submit=${(event: SubmitEvent) => this.handleLogin(event)} novalidate>
               <p>
                 <kemet-field label="Username">
                   <kemet-input required slot="input" name="username" rounded validate-on-blur></kemet-input>
@@ -120,18 +120,14 @@ export class LaszLogin extends LitElement {
             </form>
           </kemet-tab-panel>
           <kemet-tab-panel slot="panel">
-            <form method="post" action="wp-json/lasz-woocommerce/v1/user/register" @submit=${(event: SubmitEvent) => this.handleRegistration(event)} novalidate>
-              <kemet-field slug="user_name" label="Username" message="A valid username is required">
-                <kemet-input required slot="input" name="user_name" validate-on-blur></kemet-input>
+            <form id="register" @submit=${(event: SubmitEvent) => this.handleRegistration(event)} novalidate>
+              <kemet-field slug="user_email" label="Email" message="A valid email is required">
+                <kemet-input required slot="input" name="user_email" type="email" validate-on-blur></kemet-input>
               </kemet-field>
               <br />
               <kemet-field slug="user_pass" label="New Password" status="standard">
                 <kemet-input slot="input" type="password" name="user_pass" status="standard"></kemet-input>
                 <kemet-password slot="component" message="Please make sure you meet all the requirements."></kemet-password>
-              </kemet-field>
-              <br />
-              <kemet-field slug="user_email" label="Email" message="A valid email is required">
-                <kemet-input required slot="input" name="user_email" type="email" validate-on-blur></kemet-input>
               </kemet-field>
               <br />
               <kemet-button>
@@ -160,14 +156,12 @@ export class LaszLogin extends LitElement {
 
   fetchLogin(credentials: ICredentials) {
     const options = {
-      method: this.loginForm.getAttribute('method')?.toUpperCase(),
+      method: 'POST',
       body: JSON.stringify(credentials),
       headers: { 'Content-Type': 'application/json' }
     };
 
-    const endpoint = this.loginForm.getAttribute('action');
-
-    fetch(`${API_URL}/${endpoint}`, options)
+    fetch(`/api/user/token`, options)
       .then(response => response.json())
       .then(async response => {
         // bad access
@@ -190,7 +184,7 @@ export class LaszLogin extends LitElement {
               'Authorization': `Bearer ${response.token}`
             }
           };
-          const userProfile = await fetch(`${API_URL}/wp-json/wp/v2/users/${response.user_id.toString()}?context=edit`, options).then((response) => response.json());
+          const userProfile = await fetch(`/api/user/${response.user_id.toString()}`, options).then((response) => response.json());
           this.userController.actions?.updateProfile(userProfile);
           this.userController.actions?.login(response);
           window.location.href = '/account';
@@ -210,6 +204,7 @@ export class LaszLogin extends LitElement {
     event.preventDefault();
 
     const formData = new FormData(this.registerForm) as any;
+    formData.append('user_name', formData.get('user_email'));
 
     const options = {
       method: 'POST',
@@ -220,9 +215,7 @@ export class LaszLogin extends LitElement {
       body: JSON.stringify(Object.fromEntries(formData))
     };
 
-    const endpoint = this.registerForm.getAttribute('action');
-
-    fetch(`${API_URL}/${endpoint}`, options)
+    fetch(`/api/user/register`, options)
       .then(response => response.json())
       .then((responseData) => {
         this.alertController.actions?.setConfig({
@@ -259,7 +252,6 @@ export class LaszLogin extends LitElement {
           }
 
           this.fetchLogin(credentials);
-          window.location.href = '/account';
         }
       })
       .catch(() => {
@@ -272,10 +264,11 @@ export class LaszLogin extends LitElement {
       });
   }
 
-  handleForgotPassword(event: SubmitEvent) {
+  handleResetPassword(event: SubmitEvent) {
     event.preventDefault();
 
     const formData = new FormData(this.resetForm) as any;
+    this.resetEmail = formData.get('email');
 
     const options = {
       method: 'POST',
@@ -286,9 +279,7 @@ export class LaszLogin extends LitElement {
       body: JSON.stringify(Object.fromEntries(formData))
     };
 
-    const endpoint = this.resetForm.getAttribute('action');
-
-    fetch(`${API_URL}/${endpoint}`, options)
+    fetch(`/api/user/resetpass`, options)
       .then(response => response.json())
       .then((responseData) => {
         if (responseData.data.status === 200) {
@@ -304,10 +295,11 @@ export class LaszLogin extends LitElement {
       });
   }
 
-  handleNewPassword(event: SubmitEvent) {
+  handleSetPassword(event: SubmitEvent) {
     event.preventDefault();
 
     const formData = new FormData(this.setPasswordForm) as any;
+    this.resetPassword = formData.get('password');
 
     const options = {
       method: 'POST',
@@ -318,20 +310,20 @@ export class LaszLogin extends LitElement {
       body: JSON.stringify(Object.fromEntries(formData))
     };
 
-    const endpoint = this.setPasswordForm.getAttribute('action');
 
-    fetch(`${API_URL}/${endpoint}`, options)
+    fetch(`/api/user/setpass`, options)
       .then(response => response.json())
       .then((responseData) => {
-        if (responseData.data.status === 200) {
+        if (responseData.data?.status === 200) {
           const credentials = {
             username: this.resetEmail,
             password: this.resetPassword
           }
+          console.log('credentails', credentials);
 
           this.alertController.actions?.setConfig({
             status: 'success',
-            message: unsafeHTML(responseData.message),
+            message: responseData.message,
             opened: true,
             icon: 'check-circle'
           });
@@ -340,7 +332,7 @@ export class LaszLogin extends LitElement {
         } else {
           this.alertController.actions?.setConfig({
             status: 'error',
-            message: unsafeHTML(responseData.message) || 'An unknown problem has occurred.',
+            message: responseData.message || 'An unknown problem has occurred.',
             opened: true,
             icon: 'exclamation-circle'
           });
@@ -355,21 +347,15 @@ export class LaszLogin extends LitElement {
   makeForgotPassword() {
     if (this.forgotStatus === 'enter-code') {
       return html`
-        <form method="post" action="wp-json/bdpwr/v1/set-password" @submit=${(event: SubmitEvent) => this.handleNewPassword(event)} novalidate>
+        <form id="setpass" @submit=${(event: SubmitEvent) => this.handleSetPassword(event)} novalidate>
           <kemet-input name="email" type="hidden" value=${this.resetEmail}></kemet-input>
           <br />
           <kemet-field slug="code" label="Enter the code your received via email" message="A code is required">
             <kemet-input required slot="input" name="code" type="password" validate-on-blur></kemet-input>
           </kemet-field>
           <br />
-          <kemet-field slug="password" label="New Password" status="standard">
-            <kemet-input
-              slot="input"
-              type="password"
-              name="password"
-              status="standard"
-              @kemet-input-input=${(event: CustomEvent) => this.resetPassword = event.detail}>
-            </kemet-input>
+          <kemet-field slug="password" label="New Password">
+            <kemet-input slot="input" type="password" name="password"></kemet-input>
             <kemet-password slot="component" message="Please make sure you meet all the requirements."></kemet-password>
           </kemet-field>
           <br />
@@ -387,16 +373,9 @@ export class LaszLogin extends LitElement {
     }
 
     return html`
-      <form method="post" action="wp-json/bdpwr/v1/reset-password" @submit=${(event: SubmitEvent) => this.handleForgotPassword(event)}>
+      <form id="resetpass" @submit=${(event: SubmitEvent) => this.handleResetPassword(event)}>
         <kemet-field slug="email" label="Email" message="A valid email is required">
-          <kemet-input
-            required
-            slot="input"
-            name="email"
-            type="email"
-            validate-on-blur
-            @kemet-input-input=${(event: CustomEvent) => this.resetEmail = event.detail }>
-          </kemet-input>
+          <kemet-input required slot="input" name="email" type="email"></kemet-input>
         </kemet-field>
         <br />
         <kemet-button>

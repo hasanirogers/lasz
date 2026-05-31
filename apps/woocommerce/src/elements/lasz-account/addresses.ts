@@ -233,7 +233,8 @@ export class LaszAccountAddresses extends LitElement {
       return;
     }
 
-    const formData = new FormData(this.billingForm) as any;
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form) as any;
     const billingData = Object.fromEntries(formData);
 
     const options = {
@@ -301,7 +302,8 @@ export class LaszAccountAddresses extends LitElement {
       return;
     }
 
-    const formData = new FormData(this.shippingForm) as any;
+    const form = event.target as HTMLFormElement;
+    const formData = new FormData(form) as any;
     const shippingData = Object.fromEntries(formData);
 
     const options = {

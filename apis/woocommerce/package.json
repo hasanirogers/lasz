@@ -10,7 +10,7 @@
     "start": "npm run wp-env:start",
     "wp-env:log": "wp-env logs development",
     "wp-env:path": "wp-env install-path",
-    "wp-env:plugins": "wp-env run cli wp plugin install updraftplus woocommerce woocommerce-gateway-stripe wp-mail-smtp jwt-authentication-for-wp-rest-api",
+    "wp-env:plugins": "wp-env run cli wp plugin install updraftplus woocommerce woocommerce-gateway-stripe wp-mail-smtp jwt-authentication-for-wp-rest-api bdvs-password-reset",
     "wp-env:start": "wp-env start",
     "wp-env:stop": "wp-env stop all",
     "wp-env:reset": "wp-env reset",

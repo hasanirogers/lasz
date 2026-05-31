@@ -1,9 +1,9 @@
 import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import styles from './styles.css?inline';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import cartStore, { centsToDollars, type CartStore } from '../../stores/cart';
 import { ZustandController } from '../../controllers/zustand';
+import styles from './item.css?inline';
 
 @customElement('lasz-cart-item')
 export class LaszCartItem extends LitElement {

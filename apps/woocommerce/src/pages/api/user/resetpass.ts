@@ -12,18 +12,17 @@ export const POST: APIRoute = async ({ request }) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        authorization: request.headers.get('authorization') || ''
+        'Accept': 'application/json'
       },
       body: JSON.stringify(body)
     };
 
-
-    const response = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/user/password`, options);
+    const response = await fetch(`${API_URL}/wp-json/bdpwr/v1/reset-password`, options);
     const responseData = await response.json();
 
     if (!response.ok) {
       console.error('User API error:', responseData);
-      return new Response(JSON.stringify({ message: responseData.message || 'Failed to create password.' }), { status: responseData.data.status || 400 });
+      return new Response(JSON.stringify({ message: responseData.message || 'Failed to reset.' }), { status: responseData.data.status || 400 });
     }
 
     return new Response(JSON.stringify(responseData), { status: 200 });

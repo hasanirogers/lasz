@@ -1,8 +1,8 @@
 import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import styles from './styles.css?inline';
 import cartStore, { type CartStore } from '../../stores/cart';
 import { ZustandController } from '../../controllers/zustand';
+import styles from './summary.css?inline';
 
 @customElement('lasz-cart-summary')
 export class LaszCartSummary extends LitElement {

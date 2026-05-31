@@ -90,6 +90,9 @@ if (!class_exists('lasz_woocommerce\Theme')) {
       // redirects
       add_action('template_redirect', array($this, 'redirect_to_new_domain_except_api'));
 
+      // disable nonce check for WooCommerce Store API (headless setup)
+      add_filter('woocommerce_store_api_disable_nonce_check', '__return_true');
+
     }
 
     public static function add_post_thumbnail_support()

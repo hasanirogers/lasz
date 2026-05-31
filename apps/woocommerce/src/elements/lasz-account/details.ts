@@ -64,7 +64,7 @@ export class LaszAccountDetails extends LitElement {
     return html`
       <h2>Account Details</h2>
       <section>
-        <form method="post" action="wp-json/wp/v2/users" @submit=${(event: SubmitEvent) => this.updateProfile(event)}>
+        <form @submit=${(event: SubmitEvent) => this.updateProfile(event)}>
           <fieldset>
             <legend>Your Profile</legend>
             <div>
@@ -91,7 +91,7 @@ export class LaszAccountDetails extends LitElement {
           </fieldset>
         </form>
 
-        <form method="post" action="wp-json/lasz-woocommerce/v1/password" @submit=${(event: SubmitEvent) => this.changePassword(event)}>
+        <form @submit=${(event: SubmitEvent) => this.changePassword(event)}>
           <fieldset>
             <legend>Change Password</legend>
             <p>
@@ -130,7 +130,7 @@ export class LaszAccountDetails extends LitElement {
     const formData = new FormData(this.userForm) as any;
 
     const options = {
-      method: this.userForm.getAttribute('method')?.toUpperCase() || 'POST',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.userController.data.user.token}`
@@ -138,9 +138,7 @@ export class LaszAccountDetails extends LitElement {
       body: JSON.stringify(Object.fromEntries(formData))
     };
 
-    const endpoint = this.userForm.getAttribute('action');
-
-    const profile = await fetch(`${API_URL}/${endpoint}/${this.userController.data.user.user_id.toString()}?context=edit`, options)
+    const profile = await fetch(`/api/user/${this.userController.data.user.user_id.toString()}`, options)
       .then((response) => response.json())
       .catch((error) => console.error(error));
 
@@ -194,7 +192,7 @@ export class LaszAccountDetails extends LitElement {
         })
       }
 
-      await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/user/password`, options)
+      await fetch(`/api/user/password`, options)
         .then((response) => response.json())
         .then((responseData) => {
           if (responseData.status === 'error') {

@@ -33,7 +33,7 @@ const getProfile = async () => {
     }
   };
 
-  const userProfile = await fetch(`/api/users/${user.user_id.toString()}`, options)
+  const userProfile = await fetch(`/api/user/${user.user_id.toString()}`, options)
     .then((response) => response.json());
 
   if (userProfile) {

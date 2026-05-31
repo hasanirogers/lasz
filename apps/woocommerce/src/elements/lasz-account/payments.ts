@@ -124,13 +124,7 @@ export class LaszAccountPayments extends LitElement {
     };
 
     try {
-      const response = await fetch(
-        `${API_URL}/wp-json/lasz-woocommerce/v1/customer/payment-methods/${method.id}`,
-        {
-          ...options,
-          method: 'DELETE'
-        }
-      );
+      const response = await fetch(`/api/customer/payment-methods/${method.id}`, options);
 
       if (response.ok) {
         await this.fetchPaymentMethods();
@@ -178,10 +172,7 @@ export class LaszAccountPayments extends LitElement {
     };
 
     try {
-      const response = await fetch(
-        `${API_URL}/wp-json/wc/v3/customers/${this.userController.data.user.user_id.toString()}`,
-        options
-      );
+      const response = await fetch(`/api/customer/${this.userController.data.user.user_id.toString()}`, options);
 
       if (response.ok) {
         const customerData = await response.json();

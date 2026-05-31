@@ -101,7 +101,7 @@ export class LaszAccountOrders extends LitElement {
 
     try {
       const response = await fetch(
-        `${API_URL}/wp-json/lasz-woocommerce/v1/customer/orders`,
+        `/api/customer/orders`,
         options
       );
 

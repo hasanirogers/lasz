@@ -260,7 +260,7 @@ export class LaszAccountAddresses extends LitElement {
     };
 
     try {
-      const response = await fetch(`${API_URL}/wp-json/wc/v3/customers/${this.userController.data.user.user_id.toString()}`, options);
+      const response = await fetch(`/api/customer/${this.userController.data.user.user_id.toString()}`, options);
       const result = await response.json();
 
       if (response.ok) {
@@ -326,7 +326,7 @@ export class LaszAccountAddresses extends LitElement {
     };
 
     try {
-      const response = await fetch(`${API_URL}/wp-json/wc/v3/customers/${this.userController.data.user.user_id.toString()}`, options);
+      const response = await fetch(`/api/customer/${this.userController.data.user.user_id.toString()}`, options);
       const result = await response.json();
 
       if (response.ok) {

@@ -91,7 +91,7 @@ export class LaszAccountDetails extends LitElement {
           </fieldset>
         </form>
 
-        <form method="post" action="wp-json/lasz-woocommerce/v1/change-password" @submit=${(event: SubmitEvent) => this.changePassword(event)}>
+        <form method="post" action="wp-json/lasz-woocommerce/v1/password" @submit=${(event: SubmitEvent) => this.changePassword(event)}>
           <fieldset>
             <legend>Change Password</legend>
             <p>
@@ -194,7 +194,7 @@ export class LaszAccountDetails extends LitElement {
         })
       }
 
-      await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/change-password`, options)
+      await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/user/password`, options)
         .then((response) => response.json())
         .then((responseData) => {
           if (responseData.status === 'error') {

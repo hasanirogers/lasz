@@ -57,6 +57,7 @@ export class LaszCheckout extends LitElement {
     addresses: IUserStore['addresses'],
     isLoggedIn: IUserStore['isLoggedIn'],
     user: IUserStore['user'],
+    paymentMethods: IUserStore['paymentMethods'],
   }, {
     updateProfile: IUserStore['updateProfile'],
     login: IUserStore['login'],
@@ -140,6 +141,9 @@ export class LaszCheckout extends LitElement {
   @state()
   private cardElement: any = null;
 
+  @state()
+  private selectedSavedPaymentMethod: string | null = null;
+
   @query('[action="api/checkout"]')
   private checkoutForm!: HTMLFormElement;
 
@@ -152,7 +156,8 @@ export class LaszCheckout extends LitElement {
       (state) => ({
         addresses: state.addresses,
         isLoggedIn: state.isLoggedIn,
-        user: state.user
+        user: state.user,
+        paymentMethods: state.paymentMethods
       }),
       (state) => ({
         updateProfile: state.updateProfile,
@@ -360,6 +365,14 @@ export class LaszCheckout extends LitElement {
     console.log('Form data updated:', this.formData);
   }
 
+  private handleSavedPaymentMethodChange(token: string | null) {
+    this.selectedSavedPaymentMethod = token;
+    console.log('Selected saved payment method:', token);
+
+    // Trigger re-render to show/hide card element
+    this.requestUpdate();
+  }
+
   async handleLogin(credentials: ICredentials) {
     const options = {
       method: 'POST',
@@ -413,7 +426,7 @@ export class LaszCheckout extends LitElement {
       })
     };
 
-    const registerResponse = await fetch(`${PUBLIC_API_URL}/wp-json/lasz-woocommerce/v1/register`, options);
+    const registerResponse = await fetch(`${PUBLIC_API_URL}/wp-json/lasz-woocommerce/v1/user/register`, options);
     const responseData = await registerResponse.json();
 
     if (!registerResponse.ok) {
@@ -494,15 +507,19 @@ export class LaszCheckout extends LitElement {
       console.log('Validating card details for payment method:', this.formData.payment_method);
       console.log('Card details:', {
         hasCardElement: !!this.cardElement,
-        card_name: !!this.formData.card_name
+        card_name: !!this.formData.card_name,
+        selectedSavedPaymentMethod: this.selectedSavedPaymentMethod
       });
 
       if (this.formData.payment_method === 'stripe') {
-        if (!this.cardElement || !this.formData.card_name) {
-          console.log('Card validation failed - missing Stripe Element or cardholder name');
-          this.checkoutError = 'Please enter cardholder name and ensure card details are complete for Stripe payment.';
-          this.isProcessing = false;
-          return;
+        // If using a saved payment method, no need to validate card element or card name
+        if (!this.selectedSavedPaymentMethod) {
+          if (!this.cardElement || !this.formData.card_name) {
+            console.log('Card validation failed - missing Stripe Element or cardholder name');
+            this.checkoutError = 'Please enter cardholder name and ensure card details are complete for Stripe payment.';
+            this.isProcessing = false;
+            return;
+          }
         }
         console.log('Card validation passed');
       }
@@ -596,7 +613,6 @@ export class LaszCheckout extends LitElement {
     const paymentData = [
       // This tells the gateway WHICH Stripe flow to use
       { key: 'wc-stripe-payment-type', value: 'card' },
-      { key: 'wc-stripe-new-payment-method', value: 'true' },
       { key: 'billing_email', value: this.formData.billing_email }
     ];
 
@@ -604,6 +620,13 @@ export class LaszCheckout extends LitElement {
       const stripePaymentMethodId = await this.createStripePaymentMethod();
 
       if (stripePaymentMethodId) {
+        // If using a saved payment method, set new-payment-method to false
+        if (this.selectedSavedPaymentMethod) {
+          paymentData.push({ key: 'wc-stripe-new-payment-method', value: 'false' });
+        } else {
+          paymentData.push({ key: 'wc-stripe-new-payment-method', value: 'true' });
+        }
+
         // THE KEY: Use 'payment_method' as the key name if 'wc-stripe-payment-method' fails
         paymentData.push({ key: 'payment_method', value: stripePaymentMethodId });
         paymentData.push({ key: 'wc-stripe-payment-method', value: stripePaymentMethodId });
@@ -616,6 +639,13 @@ export class LaszCheckout extends LitElement {
   }
 
   private async createStripePaymentMethod() {
+    // If a saved payment method is selected, return its token directly
+    if (this.selectedSavedPaymentMethod) {
+      console.log('Using saved payment method:', this.selectedSavedPaymentMethod);
+      return this.selectedSavedPaymentMethod;
+    }
+
+    // Otherwise create a new payment method from the card element
     if (!this.stripe || !this.cardElement) return null;
 
     try {
@@ -650,22 +680,60 @@ export class LaszCheckout extends LitElement {
 
   private makePaymentDetails(paymentMethod: string) {
     console.log('Rendering payment details for:', paymentMethod);
+    console.log('User logged in:', this.userController.data.isLoggedIn);
+    console.log('Payment methods:', this.userController.data.paymentMethods);
 
     if (paymentMethod === 'stripe') {
+      const savedPaymentMethods = this.userController.data.paymentMethods || [];
+      console.log('Saved payment methods:', savedPaymentMethods);
+
+      // The API endpoint already filters for Stripe tokens, so show all returned methods
+      const stripeSavedMethods = savedPaymentMethods;
+      console.log('Stripe saved methods:', stripeSavedMethods);
+
       return html`
-        <kemet-field label="Name on Card *" slug="card_name">
-          <kemet-input
-            slot="input"
-            name="card_name"
-            .value=${this.formData.card_name}
-            placeholder="John Doe"
-            @input=${this.handleInputChange}
-            required
-          ></kemet-input>
-        </kemet-field>
-        <br />
-        <slot name="stripe-element-container"></slot>
-        <slot name="stripe-errors-container"></slot>
+        ${stripeSavedMethods.length > 0 ? html`
+          <div class="saved-payment-methods">
+            <h4>Saved Cards</h4>
+            ${stripeSavedMethods.map((pm: any) => html`
+              <label class="saved-card-option">
+                <input
+                  type="radio"
+                  name="saved_payment_method"
+                  value=${pm.token}
+                  .checked=${this.selectedSavedPaymentMethod === pm.token}
+                  @change=${(e: Event) => this.handleSavedPaymentMethodChange((e.target as HTMLInputElement).value)}
+                />
+                <span>•••• ${pm.last4} (${pm.brand || 'Card'})</span>
+              </label>
+            `)}
+            <label class="saved-card-option">
+              <input
+                type="radio"
+                name="saved_payment_method"
+                value="new"
+                .checked=${this.selectedSavedPaymentMethod === null}
+                @change=${() => this.handleSavedPaymentMethodChange(null)}
+              />
+              <span>Use a new card</span>
+            </label>
+          </div>
+        ` : ''}
+        ${this.selectedSavedPaymentMethod === null ? html`
+          <kemet-field label="Name on Card *" slug="card_name">
+            <kemet-input
+              slot="input"
+              name="card_name"
+              .value=${this.formData.card_name}
+              placeholder="John Doe"
+              @input=${this.handleInputChange}
+              required
+            ></kemet-input>
+          </kemet-field>
+          <br />
+          <slot name="stripe-element-container"></slot>
+          <slot name="stripe-errors-container"></slot>
+        ` : ''}
       `;
     }
 
@@ -673,6 +741,12 @@ export class LaszCheckout extends LitElement {
   }
 
   private mountStripeElement() {
+    // Don't mount if a saved payment method is selected
+    if (this.selectedSavedPaymentMethod) {
+      console.log('Using saved payment method, skipping card element mount');
+      return;
+    }
+
     // Look in the main document (Light DOM) because it's slotted
     const mountPoint = document.getElementById('card-element');
 

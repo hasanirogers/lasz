@@ -120,7 +120,7 @@ export class LaszLogin extends LitElement {
             </form>
           </kemet-tab-panel>
           <kemet-tab-panel slot="panel">
-            <form method="post" action="wp-json/lasz-woocommerce/v1/register" @submit=${(event: SubmitEvent) => this.handleRegistration(event)} novalidate>
+            <form method="post" action="wp-json/lasz-woocommerce/v1/user/register" @submit=${(event: SubmitEvent) => this.handleRegistration(event)} novalidate>
               <kemet-field slug="user_name" label="Username" message="A valid username is required">
                 <kemet-input required slot="input" name="user_name" validate-on-blur></kemet-input>
               </kemet-field>

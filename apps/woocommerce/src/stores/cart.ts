@@ -232,7 +232,7 @@ const store = createStore<CartStore>((set, get) => ({
           ...(variation && { variation }),
         };
 
-      const response = await fetch(`${PUBLIC_API_URL}/wp-json/wc/store/v1/cart/add-item`, {
+      const response = await fetch(`/api/cart/item/add`, {
         method: 'POST',
         headers,
         body: JSON.stringify(payload),
@@ -284,9 +284,10 @@ const store = createStore<CartStore>((set, get) => ({
         headers['X-WC-Store-API-Nonce'] = nonce;
       }
 
-      const response = await fetch(`${PUBLIC_API_URL}/wp-json/wc/store/v1/cart/remove-item?key=${key}`, {
+      const response = await fetch(`/api/cart/item/remove`, {
         method: 'POST',
         headers,
+        body: JSON.stringify({ key }),
       });
 
       if (!response.ok) {
@@ -333,13 +334,10 @@ const store = createStore<CartStore>((set, get) => ({
         headers['X-WC-Store-API-Nonce'] = nonce;
       }
 
-      const response = await fetch(`${PUBLIC_API_URL}/wp-json/wc/store/v1/cart/update-item`, {
+      const response = await fetch(`/api/cart/item/update`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          key,
-          quantity,
-        }),
+        body: JSON.stringify({ key, quantity }),
       });
 
       if (!response.ok) {
@@ -401,7 +399,7 @@ const store = createStore<CartStore>((set, get) => ({
         headers['Cart-Token'] = cartToken;
       }
 
-      const response = await fetch(`${PUBLIC_API_URL}/wp-json/wc/store/v1/cart`, {
+      const response = await fetch(`/api/cart`, {
         headers,
       });
 

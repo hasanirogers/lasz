@@ -16,7 +16,6 @@ export class LaszProduct extends LitElement {
 
   firstUpdated() {
     this.product = JSON.parse(this.data);
-    console.log('Product Data after parse:', this.product);
   }
 
   render() {

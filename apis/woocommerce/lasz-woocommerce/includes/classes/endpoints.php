@@ -10,11 +10,9 @@ class Endpoints
   public static function init()
   {
     add_action('rest_api_init', array(self::class, 'add_contact_form'));
-    add_action('rest_api_init', array(self::class, 'add_user_registration'));
-    add_action('rest_api_init', array(self::class, 'add_change_password'));
 
-    add_action('rest_api_init', array(self::class, 'get_site_logo'));
-    add_action('rest_api_init', array(self::class, 'get_blog_info'));
+    add_action('rest_api_init', array(self::class, 'add_user_registration'));
+    add_action('rest_api_init', array(self::class, 'add_user_password'));
 
     add_action('rest_api_init', array(self::class, 'get_nav_header'));
     add_action('rest_api_init', array(self::class, 'get_nav_top'));
@@ -22,20 +20,80 @@ class Endpoints
     add_action('rest_api_init', array(self::class, 'get_nav_useful_links'));
     add_action('rest_api_init', array(self::class, 'get_nav_categories'));
 
+    add_action('rest_api_init', array(self::class, 'get_theme_logo'));
     add_action('rest_api_init', array(self::class, 'get_theme_mods'));
+    add_action('rest_api_init', array(self::class, 'get_theme_info'));
+
     add_action('rest_api_init', array(self::class, 'get_order_status'));
-    add_action('rest_api_init', array(self::class, 'get_customer_data'));
-    add_action('rest_api_init', array(self::class, 'get_payment_methods'));
-    add_action('rest_api_init', array(self::class, 'delete_payment_method'));
+
+    add_action('rest_api_init', array(self::class, 'get_customer'));
     add_action('rest_api_init', array(self::class, 'get_customer_orders'));
+    add_action('rest_api_init', array(self::class, 'get_customer_payment_methods'));
+    add_action('rest_api_init', array(self::class, 'delete_customer_payment_method'));
+
   }
 
   public static function add_contact_form() {
+    register_rest_route('lasz-woocommerce/v1', 'forms/contact', array(
+      'methods' => 'POST',
+      'callback' => function ($request) {
+        $files = $request->get_file_params();
+        $contactDir = ABSPATH . 'wp-content/uploads/contact/';
+
+        if (!file_exists($contactDir)) {
+          mkdir($contactDir);
+          chmod($contactDir, 0777);
+        }
+
+        move_uploaded_file($files["file"]["tmp_name"],  $contactDir . $files["file"]["name"]);
+
+        $to = $request->get_param('to');
+        $subject = $request->get_param('subject');
+        $fullName = $request->get_param('fullname');
+        $phone = $request->get_param('phone');
+        $email = $request->get_param('email');
+
+        $message = '
+          User Information
+          --------------------------------
+          Name: '. $fullName .'
+          Phone: '. $phone .'
+          Email: '. $email .'
+
+          User Message
+          --------------------------------
+          '. $request->get_param('message') .'
+        ';
+
+        $headers = array('From: '. $request->get_param('from-name') .' <'. $request->get_param('from-email') .'>');
+        $headers = implode( PHP_EOL, $headers );
+        $attachments = array($contactDir . $files["file"]["name"]);
+
+        $sent = wp_mail($to, $subject, $message, $headers, $attachments);
+
+        if ($sent) {
+          return array(
+            'status' => 'ok',
+            'message' => 'Alright your message was sent!',
+          );
+        } else {
+          return array(
+            'status' => 'error',
+            'message' => 'Oops. There was a problem sending your message.',
+          );
+        }
+
+        unlink($contactDir . $files["file"]["name"]);
+      }
+    ));
   }
+
+  // User
+  // -----
 
   public static function add_user_registration()
   {
-    register_rest_route('lasz-woocommerce/v1', 'register', array(
+    register_rest_route('lasz-woocommerce/v1', 'user/register', array(
       'methods' => 'POST',
       'callback' => function ($request) {
         // Reference: https://developer.wordpress.org/reference/classes/wp_rest_request/
@@ -79,9 +137,9 @@ class Endpoints
     ));
   }
 
-  public static function add_change_password()
+  public static function add_user_password()
   {
-    register_rest_route('lasz-woocommerce/v1', 'change-password', array(
+    register_rest_route('lasz-woocommerce/v1', 'user/password', array(
       'methods' => 'POST',
       'callback' => function ($request) {
         $user_id = $request->get_param('user_id');
@@ -128,103 +186,9 @@ class Endpoints
     ));
   }
 
-  public static function upload_file()
-  {
-    require_once(ABSPATH . 'wp-admin/includes/image.php');
-    require_once(ABSPATH . 'wp-admin/includes/file.php');
-    require_once(ABSPATH . 'wp-admin/includes/media.php');
-    //upload only images and files with the following extensions
-    $file_extension_type = array('jpg', 'jpeg', 'jpe', 'gif', 'png', 'bmp', 'tiff', 'tif', 'ico', 'zip', 'pdf', 'docx');
-    $file_extension = strtolower(pathinfo($_FILES['async-upload']['name'], PATHINFO_EXTENSION));
-    if (!in_array($file_extension, $file_extension_type)) {
-      return wp_send_json(
-        array(
-          'success' => false,
-          'data'    => array(
-            'message'  => __('The uploaded file is not a valid file. Please try again.'),
-            'filename' => esc_html($_FILES['async-upload']['name']),
-            'extension' => $file_extension
-          ),
-        )
-      );
-    }
 
-    $attachment_id = media_handle_upload('async-upload', null, []);
-
-    if (is_wp_error($attachment_id)) {
-      return wp_send_json(
-        array(
-          'success' => false,
-          'data'    => array(
-            'message'  => $attachment_id->get_error_message(),
-            'filename' => esc_html($_FILES['async-upload']['name']),
-          ),
-        )
-      );
-    }
-
-    if (isset($post_data['context']) && isset($post_data['theme'])) {
-      if ('custom-background' === $post_data['context']) {
-        update_post_meta($attachment_id, '_wp_attachment_is_custom_background', $post_data['theme']);
-      }
-
-      if ('custom-header' === $post_data['context']) {
-        update_post_meta($attachment_id, '_wp_attachment_is_custom_header', $post_data['theme']);
-      }
-    }
-
-    $attachment = wp_prepare_attachment_for_js($attachment_id);
-    if (!$attachment) {
-      return wp_send_json(
-        array(
-          'success' => false,
-          'data'    => array(
-            'message'  => __('Image cannot be uploaded.'),
-            'filename' => esc_html($_FILES['async-upload']['name']),
-          ),
-        )
-      );
-    }
-
-    return wp_send_json(
-      array(
-        'success' => true,
-        'data'    => $attachment,
-      )
-    );
-  }
-
-  public static function get_site_logo() {
-    register_rest_route('lasz-woocommerce/v1', 'site_logo', array(
-      'methods' => 'GET',
-      'callback' => function ($request) {
-        $siteLogoID = get_theme_mod('site-logo');
-        $siteLogoUrlFull = null;
-        if ($siteLogoID) {
-          $siteLogoUrlFull = wp_get_attachment_image_url($siteLogoID, 'full');
-        }
-        return new WP_REST_Response(array(
-          'site_logo_full' => $siteLogoUrlFull,
-        ), 200);
-      },
-      'permission_callback' => '__return_true',
-    ));
-  }
-
-  public static function get_blog_info() {
-    register_rest_route('lasz-woocommerce/v1', 'bloginfo', array(
-      'methods' => 'GET',
-      'callback' => function ($request) {
-        $name = get_bloginfo('name');
-        $description = get_bloginfo('description');
-        return new WP_REST_Response(array(
-          'name' => $name,
-          'description' => $description,
-        ), 200);
-      },
-      'permission_callback' => '__return_true',
-    ));
-  }
+  // Nav
+  // ---
 
   public static function get_nav_header() {
     register_rest_route('lasz-woocommerce/v1', 'nav/header', array(
@@ -386,6 +350,27 @@ class Endpoints
     ));
   }
 
+
+  // Theme
+  // -----
+
+  public static function get_theme_logo() {
+    register_rest_route('lasz-woocommerce/v1', 'theme/logo', array(
+      'methods' => 'GET',
+      'callback' => function ($request) {
+        $siteLogoID = get_theme_mod('site-logo');
+        $siteLogoUrlFull = null;
+        if ($siteLogoID) {
+          $siteLogoUrlFull = wp_get_attachment_image_url($siteLogoID, 'full');
+        }
+        return new WP_REST_Response(array(
+          'site_logo_full' => $siteLogoUrlFull,
+        ), 200);
+      },
+      'permission_callback' => '__return_true',
+    ));
+  }
+
   public static function get_theme_mods() {
     register_rest_route('lasz-woocommerce/v1', 'theme/mods', array(
       'methods' => 'GET',
@@ -401,6 +386,25 @@ class Endpoints
       'permission_callback' => '__return_true',
     ));
   }
+
+  public static function get_theme_info() {
+    register_rest_route('lasz-woocommerce/v1', 'theme/info', array(
+      'methods' => 'GET',
+      'callback' => function ($request) {
+        $name = get_bloginfo('name');
+        $description = get_bloginfo('description');
+        return new WP_REST_Response(array(
+          'name' => $name,
+          'description' => $description,
+        ), 200);
+      },
+      'permission_callback' => '__return_true',
+    ));
+  }
+
+
+  // Order
+  // -----
 
   public static function get_order_status() {
     register_rest_route('lasz-woocommerce/v1', 'orders/status', array(
@@ -434,8 +438,12 @@ class Endpoints
     ));
   }
 
-  public static function get_customer_data() {
-    register_rest_route('lasz-woocommerce/v1', 'customer/data', array(
+
+  // Customer
+  // --------
+
+  public static function get_customer() {
+    register_rest_route('lasz-woocommerce/v1', 'customer', array(
       'methods' => 'GET',
       'callback' => function ($request) {
         $current_user_id = get_current_user_id();
@@ -462,7 +470,57 @@ class Endpoints
     ));
   }
 
-  public static function get_payment_methods() {
+  public static function get_customer_orders() {
+    register_rest_route('lasz-woocommerce/v1', 'customer/orders', array(
+      'methods' => 'GET',
+      'callback' => function ($request) {
+        $current_user_id = get_current_user_id();
+
+        if (!$current_user_id) {
+          return new WP_REST_Response(array('message' => 'User not authenticated'), 401);
+        }
+
+        if (!class_exists('WooCommerce')) {
+          return new WP_REST_Response(array('message' => 'WooCommerce is not active'), 503);
+        }
+
+        try {
+          $args = array(
+            'customer_id' => $current_user_id,
+            'limit' => -1,
+          );
+
+          $orders = wc_get_orders($args);
+
+          if (empty($orders)) {
+            return new WP_REST_Response(array('orders' => array()), 200);
+          }
+
+          $formatted_orders = array();
+
+          foreach ($orders as $order) {
+            $formatted_orders[] = array(
+              'id' => $order->get_id(),
+              'number' => $order->get_order_number(),
+              'status' => $order->get_status(),
+              'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'),
+              'total' => $order->get_total(),
+              'currency' => $order->get_currency(),
+              'currency_symbol' => html_entity_decode(get_woocommerce_currency_symbol($order->get_currency())),
+            );
+          }
+
+          return new WP_REST_Response(array('orders' => $formatted_orders), 200);
+        } catch (Exception $e) {
+          error_log('Get Customer Orders Error: ' . $e->getMessage());
+          return new WP_REST_Response(array('message' => 'Error fetching orders: ' . $e->getMessage()), 500);
+        }
+      },
+      'permission_callback' => '__return_true',
+    ));
+  }
+
+  public static function get_customer_payment_methods() {
     register_rest_route('lasz-woocommerce/v1', 'customer/payment-methods', array(
       'methods' => 'GET',
       'callback' => function ($request) {
@@ -534,7 +592,7 @@ class Endpoints
     ));
   }
 
-  public static function delete_payment_method() {
+  public static function delete_customer_payment_method() {
     register_rest_route('lasz-woocommerce/v1', 'customer/payment-methods/(?P<token_id>\d+)', array(
       'methods' => 'DELETE',
       'callback' => function ($request) {
@@ -587,55 +645,6 @@ class Endpoints
       'permission_callback' => '__return_true',
     ));
   }
-
-  public static function get_customer_orders() {
-    register_rest_route('lasz-woocommerce/v1', 'customer/orders', array(
-      'methods' => 'GET',
-      'callback' => function ($request) {
-        $current_user_id = get_current_user_id();
-
-        if (!$current_user_id) {
-          return new WP_REST_Response(array('message' => 'User not authenticated'), 401);
-        }
-
-        if (!class_exists('WooCommerce')) {
-          return new WP_REST_Response(array('message' => 'WooCommerce is not active'), 503);
-        }
-
-        try {
-          $args = array(
-            'customer_id' => $current_user_id,
-            'limit' => -1,
-          );
-
-          $orders = wc_get_orders($args);
-
-          if (empty($orders)) {
-            return new WP_REST_Response(array('orders' => array()), 200);
-          }
-
-          $formatted_orders = array();
-
-          foreach ($orders as $order) {
-            $formatted_orders[] = array(
-              'id' => $order->get_id(),
-              'number' => $order->get_order_number(),
-              'status' => $order->get_status(),
-              'date_created' => $order->get_date_created()->date('Y-m-d H:i:s'),
-              'total' => $order->get_total(),
-              'currency' => $order->get_currency(),
-              'currency_symbol' => html_entity_decode(get_woocommerce_currency_symbol($order->get_currency())),
-            );
-          }
-
-          return new WP_REST_Response(array('orders' => $formatted_orders), 200);
-        } catch (Exception $e) {
-          error_log('Get Customer Orders Error: ' . $e->getMessage());
-          return new WP_REST_Response(array('message' => 'Error fetching orders: ' . $e->getMessage()), 500);
-        }
-      },
-      'permission_callback' => '__return_true',
-    ));
-  }
 }
+
 Endpoints::init();

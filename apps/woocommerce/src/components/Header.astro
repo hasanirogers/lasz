@@ -7,7 +7,7 @@ const REST_CUSTOM_URL = `${API_URL}/wp-json/lasz-woocommerce/v1`;
 const siteLogoData = await fetch(`${REST_CUSTOM_URL}/site_logo`);
 const siteLogoFull = (await siteLogoData.json()).full ?? '/logo.webp';
 
-const blogInfoData = await fetch(`${REST_CUSTOM_URL}/bloginfo`);
+const blogInfoData = await fetch(`${REST_CUSTOM_URL}/theme/info`);
 const blogInfo = await blogInfoData.json();
 const siteName = blogInfo.name;
 

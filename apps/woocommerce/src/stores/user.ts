@@ -33,7 +33,7 @@ const getProfile = async () => {
     }
   };
 
-  const userProfile = await fetch(`${API_URL}/wp-json/wp/v2/users/${user.user_id.toString()}?context=edit`, options)
+  const userProfile = await fetch(`/api/users/${user.user_id.toString()}`, options)
     .then((response) => response.json());
 
   if (userProfile) {
@@ -59,7 +59,7 @@ const getAddresses = async () => {
   };
 
   try {
-    const customerData = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/customer/data`, options)
+    const customerData = await fetch(`/api/customer`, options)
       .then((response) => response.json());
 
     if (customerData) {
@@ -94,7 +94,7 @@ const getPaymentMethods = async () => {
 
   try {
     // Use custom endpoint for Stripe plugin payment methods
-    const response = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/customer/payment-methods`, options);
+    const response = await fetch(`/api/customer/payment-methods`, options);
 
     if (response.ok) {
       const paymentMethodsData = await response.json();
@@ -127,7 +127,7 @@ const getOrders = async () => {
   };
 
   try {
-    const response = await fetch(`${API_URL}/wp-json/lasz-woocommerce/v1/customer/orders`, options);
+    const response = await fetch(`/api/customer/orders`, options);
 
     if (response.ok) {
       const ordersData = await response.json();

@@ -4,22 +4,12 @@ const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
 
 const heroResponse = await fetch(`${REST_WP_URL}/hero?_embed`);
 const heroData = await heroResponse.json();
-
-// if (heroData.length > 0 && heroData[0]._embedded?.['wp:featuredmedia']?.[0]) {
-//   const media = heroData[0]._embedded['wp:featuredmedia'][0];
-// }
-
-const breakponts = {
-  768: { perView: 1 },
-  1280: { perView: 1 },
-};
-
 ---
 
 
 <lasz-hero>
   {heroData.length > 0 && (
-    <kemet-carousel breakpoints={breakponts}>
+    <kemet-carousel>
       {heroData.length > 1 && (
         <kemet-carousel-prev slot="prev">
           <kemet-icon icon="chevron-left" size="72"></kemet-icon>
@@ -53,3 +43,18 @@ const breakponts = {
     </kemet-carousel>
   )}
 </lasz-hero>
+<script>
+  import type HTMLKemetCarouselElement from 'kemet-ui/elements/carousel.d.ts';
+
+  const breakponts = {
+    768: { perView: 1 },
+    1280: { perView: 1 },
+  };
+
+  const carousel = document.querySelector('kemet-carousel') as HTMLKemetCarouselElement;
+
+  if (carousel) {
+    carousel.breakpoints = breakponts;
+  }
+</script>
+

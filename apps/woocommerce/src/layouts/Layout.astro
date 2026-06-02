@@ -10,6 +10,14 @@ import '../styles/cea.css';
 import '../styles/wordpress.css';
 
 const { title = 'LaszCommerce' } = Astro.props;
+
+// const API_URL = import.meta.env.PUBLIC_API_URL;
+// const REST_CUSTOM_URL = `${API_URL}/wp-json/lasz-woocommerce/v1`;
+// const siteLogoData = await fetch(`${REST_CUSTOM_URL}/theme/logo`);
+// console.log(siteLogoData);
+// const siteLogoFull = (await siteLogoData.json()).full ?? '/logo.webp';
+
+const isLoggedIn = !!Astro.cookies.get('lasz-user');
 ---
 
 <html lang="en">
@@ -24,9 +32,19 @@ const { title = 'LaszCommerce' } = Astro.props;
 	</head>
 	<body>
     <kemet-drawer>
-      <nav slot="navigation">
-        [get sidebar]
-      </nav>
+      <aside slot="navigation">
+        <kemet-icon-bootstrap icon="x-lg" size="24"></kemet-icon-bootstrap>
+        <a href="/"><img src="/logo.webp" alt="LaszCommerce" /></a>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/cart">Cart</a>
+          <a href="/checkout">Checkout</a>
+          <a href="/order/status">Order Status</a>
+          {isLoggedIn && <a href="/account">Account</a>}
+          {!isLoggedIn && <a href="/login">Login</a>}
+          {isLoggedIn && <a href="/logout">Logout</a>}
+        </nav>
+      </aside>
       <section slot="content">
         <Header />
         <slot />

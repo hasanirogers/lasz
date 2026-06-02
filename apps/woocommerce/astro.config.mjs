@@ -11,4 +11,9 @@ export default defineConfig({
   adapter: node({
     mode: 'standalone'
   }),
+  vite: {
+    server: {
+      allowedHosts: ['localhost', '127.0.0.1', '0.0.0.0', 'golf-wrought-copious.ngrok-free.dev']
+    }
+  }
 });

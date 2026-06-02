@@ -5,7 +5,7 @@ import type { MenuItem } from '../shared/interfaces';
 const API_URL = import.meta.env.PUBLIC_API_URL;
 const REST_CUSTOM_URL = `${API_URL}/wp-json/lasz-woocommerce/v1`;
 
-const siteLogoData = await fetch(`${REST_CUSTOM_URL}/site_logo`);
+const siteLogoData = await fetch(`${REST_CUSTOM_URL}/theme/logo`);
 const siteLogoFull = (await siteLogoData.json()).full ?? '/logo.webp';
 
 const blogInfoData = await fetch(`${REST_CUSTOM_URL}/theme/info`);

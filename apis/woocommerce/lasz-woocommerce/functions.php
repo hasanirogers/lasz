@@ -93,6 +93,12 @@ if (!class_exists('lasz_woocommerce\Theme')) {
       // disable nonce check for WooCommerce Store API (headless setup)
       add_filter('woocommerce_store_api_disable_nonce_check', '__return_true');
 
+      // suppress PHP warnings in API responses
+      add_action('rest_api_init', array($this, 'suppress_api_warnings'));
+
+      // WooCommerce session handling for HTTP
+      add_filter('woocommerce_session_use_secure_cookie', '__return_false');
+
     }
 
     public static function add_post_thumbnail_support()
@@ -188,6 +194,12 @@ if (!class_exists('lasz_woocommerce\Theme')) {
 
       wp_redirect($destination, 301);
       exit;
+    }
+
+    public static function suppress_api_warnings() {
+      // Suppress PHP warnings in REST API responses to prevent JSON parse errors
+      error_reporting(0);
+      ini_set('display_errors', 0);
     }
   }
 }

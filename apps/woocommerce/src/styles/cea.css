@@ -655,6 +655,7 @@ lasz-page-container {
     margin-right: auto;
     padding-left: 2rem;
     padding-right: 2rem;
+    overflow: auto;
   }
 
   > h2 {

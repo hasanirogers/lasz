@@ -337,3 +337,62 @@ lasz-checkout-shipping {
     color: var(--kemet-color-gray-700);
   }
 }
+
+.payment-request-button-container {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background-color: rgb(var(--kemet-color-gray-100) / 50%);
+
+  h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--kemet-color-gray-800);
+  }
+
+  #payment-request-button {
+    margin-bottom: 0.75rem;
+  }
+
+  .payment-request-divider {
+    font-size: 0.875rem;
+    color: var(--kemet-color-gray-600);
+    text-align: center;
+    margin: 0.5rem 0;
+    position: relative;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 40%;
+      height: 1px;
+      background-color: var(--border-color);
+    }
+
+    &::before {
+      left: 0;
+    }
+
+    &::after {
+      right: 0;
+    }
+  }
+}
+
+.payment-request-success {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border: 1px solid #28a745;
+  border-radius: 6px;
+  background-color: #d4edda;
+  color: #155724;
+
+  p {
+    margin: 0;
+    font-weight: 500;
+  }
+}

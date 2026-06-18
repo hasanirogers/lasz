@@ -7,7 +7,7 @@
     "dev": "astro dev --host --port 4321",
     "build": "astro build",
     "build:analyze": "astro build --analyze",
-    "ngrok": "ngrok http 4321",
+    "ngrok": "ngrok http 4323",
     "preview": "astro preview",
     "astro": "astro"
   },

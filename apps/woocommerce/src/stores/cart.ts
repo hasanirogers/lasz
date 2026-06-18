@@ -213,7 +213,16 @@ const store = createStore<CartStore>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const { cartToken, nonce } = get();
+      let { cartToken, nonce } = get();
+
+      // If no nonce exists, fetch the cart first to get a nonce
+      if (!nonce) {
+        console.log('No nonce found, fetching cart to obtain nonce');
+        await get().fetchCart();
+        nonce = get().nonce;
+        cartToken = get().cartToken;
+      }
+
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
@@ -245,9 +254,10 @@ const store = createStore<CartStore>((set, get) => ({
       }
 
       const data = await response.json();
-      const newCartToken = response.headers.get('Cart-Token');
+      const newCartToken = data.cartToken || response.headers.get('Cart-Token');
 
       console.log('added item to cart', data.items);
+      console.log('Cart token from response:', newCartToken);
 
       set({
         items: data.items || [],
@@ -255,6 +265,7 @@ const store = createStore<CartStore>((set, get) => ({
         totals: data.totals || null,
         shippingRates: data.shipping_rates || null,
         cartToken: newCartToken || cartToken,
+        nonce: data.nonce || nonce,
         isLoading: false
       });
 
@@ -295,7 +306,9 @@ const store = createStore<CartStore>((set, get) => ({
       }
 
       const data = await response.json();
-      const newCartToken = response.headers.get('Cart-Token');
+      const newCartToken = data.cartToken || response.headers.get('Cart-Token');
+
+      console.log('Cart token from response:', newCartToken);
 
       set({
         items: data.items || [],
@@ -345,7 +358,9 @@ const store = createStore<CartStore>((set, get) => ({
       }
 
       const data = await response.json();
-      const newCartToken = response.headers.get('Cart-Token');
+      const newCartToken = data.cartToken || response.headers.get('Cart-Token');
+
+      console.log('Cart token from response:', newCartToken);
 
       set({
         items: data.items || [],
@@ -408,9 +423,10 @@ const store = createStore<CartStore>((set, get) => ({
       }
 
       const data = await response.json();
-      const newCartToken = response.headers.get('Cart-Token');
+      const newCartToken = data.cartToken || response.headers.get('Cart-Token');
 
       console.log('will set items from fetchCart', data.items);
+      console.log('Cart token from response:', newCartToken);
 
       set({
         items: data.items || [],

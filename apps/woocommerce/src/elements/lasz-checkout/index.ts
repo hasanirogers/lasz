@@ -5,13 +5,12 @@ import cartStore, { type CartStore } from '../../stores/cart';
 import userStore, { type IUserStore } from '../../stores/user';
 import alertStore, { type IAlertStore } from '../../stores/alert';
 import { usStates } from '../../shared/data';
+import type { ICredentials } from '../lasz-login';
 import styles from './styles.css?inline';
 
 import 'kemet-ui/elements/tabs';
 import 'kemet-ui/elements/tab';
 import 'kemet-ui/elements/tab-panel';
-import type { ICredentials } from '../lasz-login';
-
 
 interface CheckoutForm {
   billing_first_name: string;
@@ -47,7 +46,7 @@ interface CheckoutForm {
   payment_details: string;
 }
 
-const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL || 'https://woocommerce.deificarts.com';
+// const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL || 'https://woocommerce.deificarts.com';
 
 @customElement('lasz-checkout')
 export class LaszCheckout extends LitElement {
@@ -144,8 +143,26 @@ export class LaszCheckout extends LitElement {
   @state()
   private selectedSavedPaymentMethod: string | null = null;
 
+  @state()
+  private paymentRequest: any = null;
+
+  @state()
+  private quickPayButton: any = null;
+
+  @state()
+  private canMakeQuickPayment: boolean = false;
+
+  @state()
+  private paymentRequestToken: string | null = null;
+
   @query('[action="api/checkout"]')
   private checkoutForm!: HTMLFormElement;
+
+  @query('#payment-request-button')
+  private paymentRequestButtonElement!: HTMLElement;
+
+  @query('slot[name="payment-request-button"]')
+  private paymentRequestButtonSlot!: HTMLSlotElement;
 
   constructor() {
     super();
@@ -206,12 +223,18 @@ export class LaszCheckout extends LitElement {
   updated(changedProperties: Map<string, any>) {
     // Re-render when form data changes to update shipping/tax calculations
     if (changedProperties.has('formData')) {
+      console.log('has form data');
       this.requestUpdate();
     }
 
     // Mount Stripe Element after DOM updates
     if (this.cardElement) {
       this.mountStripeElement();
+    }
+
+    // Mount Quick Pay Button after DOM updates
+    if (this.quickPayButton && this.canMakeQuickPayment) {
+      this.mountQuickPayButton();
     }
   }
 
@@ -315,6 +338,9 @@ export class LaszCheckout extends LitElement {
           },
         });
 
+        // Initialize Payment Request Button for Google Pay/Apple Pay
+        this.initializePaymentRequest();
+
         console.log('Stripe initialized with Elements:', publishableKey.substring(0, 10) + '...');
       } else {
         // Stripe script not loaded yet, wait and retry
@@ -327,6 +353,109 @@ export class LaszCheckout extends LitElement {
       console.warn('Stripe not initialized - missing or invalid publishable key');
       console.warn('Please set PUBLIC_STRIPE_KEY environment variable with a real Stripe publishable key');
     }
+  }
+
+  private initializePaymentRequest() {
+    if (!this.stripe) return;
+
+    const { items } = this.cartController.data;
+    const subtotal = this.cartController.actions?.getSubtotal() || '0.00';
+    const shippingCost = this.cartController.actions?.getShippingCost(false) || '0.00';
+    const taxCost = this.cartController.actions?.getTaxCost(false, '') || '0.00';
+    const grandTotal = (parseFloat(subtotal) + parseFloat(shippingCost) + parseFloat(taxCost)).toFixed(2);
+
+    // Create payment request
+    this.paymentRequest = this.stripe.paymentRequest({
+      country: 'US',
+      currency: 'usd',
+      total: {
+        label: 'Order Total',
+        amount: Math.round(parseFloat(grandTotal) * 100), // Convert to cents
+      },
+      requestPayerName: true,
+      requestPayerEmail: true,
+      requestPayerPhone: true,
+      requestShipping: true,
+      shippingOptions: [
+        {
+          id: 'standard',
+          label: 'Standard Shipping',
+          amount: Math.round(parseFloat(shippingCost) * 100),
+          detail: 'Standard shipping',
+        },
+      ],
+    });
+
+    // Check if payment request is available (Google Pay, Apple Pay, etc.)
+    this.paymentRequest.canMakePayment().then((result: any) => {
+      console.log('Can make payment result:', result);
+      if (result) {
+        this.canMakeQuickPayment = true;
+        console.log('Payment Request available:', result);
+
+        // Create and mount the button
+        this.quickPayButton = this.stripeElements.create('paymentRequestButton', {
+          paymentRequest: this.paymentRequest,
+          style: {
+            paymentRequestButton: {
+              type: 'default',
+              theme: 'dark',
+              height: '44px',
+            },
+          },
+        });
+
+        console.log('Payment Request Button created:', this.quickPayButton);
+
+        // Mount the button after DOM update
+        this.requestUpdate();
+      } else {
+        this.canMakeQuickPayment = false;
+        console.log('Payment Request not available on this device/browser');
+      }
+    }).catch((error: any) => {
+      console.error('Error checking canMakePayment:', error);
+    });
+
+    // Handle payment request token
+    this.paymentRequest.on('token', async (event: any) => {
+      console.log('Payment Request token received:', event.token);
+      this.paymentRequestToken = event.token.id;
+
+      // Auto-fill billing details from payment request
+      if (event.payerName) {
+        const names = event.payerName.split(' ');
+        this.formData = {
+          ...this.formData,
+          billing_first_name: names[0] || '',
+          billing_last_name: names.slice(1).join(' ') || '',
+          billing_email: event.payerEmail || this.formData.billing_email,
+          billing_phone: event.payerPhone || this.formData.billing_phone,
+        };
+      }
+
+      // Auto-fill shipping details if provided
+      if (event.shippingAddress) {
+        this.formData = {
+          ...this.formData,
+          billing_address_1: event.shippingAddress.addressLine?.[0] || '',
+          billing_city: event.shippingAddress.city || '',
+          billing_state: event.shippingAddress.region || '',
+          billing_postcode: event.shippingAddress.postalCode || '',
+          billing_country: event.shippingAddress.country || 'US',
+        };
+      }
+
+      // Complete the payment request (we'll process it in the checkout flow)
+      event.complete('success');
+    });
+
+    // Handle shipping address change
+    this.paymentRequest.on('shippingaddresschange', async (event: any) => {
+      console.log('Shipping address changed:', event.shippingAddress);
+      // You could recalculate shipping/tax here if needed
+      event.updateWith({ status: 'success' });
+    });
   }
 
   async loadPaymentMethods() {
@@ -639,6 +768,12 @@ export class LaszCheckout extends LitElement {
   }
 
   private async createStripePaymentMethod() {
+    // If a payment request token is available (Google Pay/Apple Pay), use it
+    if (this.paymentRequestToken) {
+      console.log('Using Payment Request token:', this.paymentRequestToken);
+      return this.paymentRequestToken;
+    }
+
     // If a saved payment method is selected, return its token directly
     if (this.selectedSavedPaymentMethod) {
       console.log('Using saved payment method:', this.selectedSavedPaymentMethod);
@@ -677,21 +812,28 @@ export class LaszCheckout extends LitElement {
     }
   }
 
-
   private makePaymentDetails(paymentMethod: string) {
-    console.log('Rendering payment details for:', paymentMethod);
-    console.log('User logged in:', this.userController.data.isLoggedIn);
-    console.log('Payment methods:', this.userController.data.paymentMethods);
-
     if (paymentMethod === 'stripe') {
       const savedPaymentMethods = this.userController.data.paymentMethods || [];
-      console.log('Saved payment methods:', savedPaymentMethods);
 
       // The API endpoint already filters for Stripe tokens, so show all returned methods
       const stripeSavedMethods = savedPaymentMethods;
-      console.log('Stripe saved methods:', stripeSavedMethods);
 
       return html`
+        ${this.canMakeQuickPayment && !this.paymentRequestToken ? html`
+          <div class="payment-request-button-container">
+            <h4>Quick Pay with Google Pay or Apple Pay</h4>
+            <slot name="payment-request-button"></slot>
+            <p class="payment-request-divider">Or pay with card</p>
+          </div>
+        ` : ''}
+
+        ${this.paymentRequestToken ? html`
+          <div class="payment-request-success">
+            <p>✓ Payment method selected via Google Pay/Apple Pay</p>
+          </div>
+        ` : ''}
+
         ${stripeSavedMethods.length > 0 ? html`
           <div class="saved-payment-methods">
             <h4>Saved Cards</h4>
@@ -719,7 +861,7 @@ export class LaszCheckout extends LitElement {
             </label>
           </div>
         ` : ''}
-        ${this.selectedSavedPaymentMethod === null ? html`
+        ${this.selectedSavedPaymentMethod === null && !this.paymentRequestToken ? html`
           <kemet-field label="Name on Card *" slug="card_name">
             <kemet-input
               slot="input"
@@ -759,6 +901,47 @@ export class LaszCheckout extends LitElement {
     }
   }
 
+  private mountQuickPayButton() {
+    // Use slot's assigned nodes (Light DOM) as mount point
+    let mountPoint: HTMLElement | null = null;
+
+    console.log('Payment Request Button Slot:', this.paymentRequestButtonSlot);
+
+    if (this.paymentRequestButtonSlot) {
+      const assignedNodes = this.paymentRequestButtonSlot.assignedNodes({ flatten: true });
+      console.log('Assigned nodes:', assignedNodes);
+      if (assignedNodes.length > 0) {
+        mountPoint = assignedNodes[0] as HTMLElement;
+        console.log('Using assigned node as mount point:', mountPoint.id);
+      }
+    }
+
+    // Fallback to internal element if no slot content provided
+    if (!mountPoint) {
+      mountPoint = this.paymentRequestButtonElement;
+      console.log('Using internal element as mount point:', mountPoint?.id);
+    }
+
+    if (mountPoint && this.quickPayButton) {
+      // Only mount if not already mounted (check if element has Stripe iframe)
+      const isMounted = mountPoint.querySelector('iframe') !== null;
+
+      if (!isMounted) {
+        console.log('Mounting payment request button to:', mountPoint.id || mountPoint.className);
+        try {
+          this.quickPayButton.mount(mountPoint);
+          console.log('Payment Request Button mounted successfully');
+        } catch (error) {
+          console.error('Error mounting payment request button:', error);
+        }
+      } else {
+        console.log('Payment Request Button already mounted (iframe found)');
+      }
+    } else {
+      console.error('Cannot mount payment request button - mountPoint or paymentRequestButton is missing');
+    }
+  }
+
   private makeShipping() {
     return html`
       <lasz-checkout-shipping>
@@ -767,7 +950,6 @@ export class LaszCheckout extends LitElement {
           <kemet-field label="First Name *" slug="shipping_first_name">
             <kemet-input
               required
-              validate-on-blur
               slot="input"
               name="shipping_first_name"
               rounded="md"
@@ -778,7 +960,6 @@ export class LaszCheckout extends LitElement {
           <kemet-field label="Last Name *" slug="shipping_last_name">
             <kemet-input
               required
-              validate-on-blur
               slot="input"
               name="shipping_last_name"
               rounded="md"
@@ -792,7 +973,6 @@ export class LaszCheckout extends LitElement {
           <kemet-field label="Address *" slug="shipping_address_1">
             <kemet-input
               required
-              validate-on-blur
               slot="input"
               name="shipping_address_1"
               rounded="md"
@@ -818,7 +998,6 @@ export class LaszCheckout extends LitElement {
           <kemet-field label="City *" slug="shipping_city">
             <kemet-input
               required
-              validate-on-blur
               slot="input"
               name="shipping_city"
               rounded="md"
@@ -829,7 +1008,6 @@ export class LaszCheckout extends LitElement {
           <kemet-field label="State *" slug="shipping_state">
             <kemet-select
               required
-              validate-on-blur
               slot="input"
               name="shipping_state"
               rounded="md"
@@ -844,7 +1022,6 @@ export class LaszCheckout extends LitElement {
           <kemet-field label="Zipcode *" slug="shipping_postcode">
             <kemet-input
               required
-              validate-on-blur
               slot="input"
               name="shipping_postcode"
               rounded="md"
@@ -899,7 +1076,6 @@ export class LaszCheckout extends LitElement {
         <kemet-field label="First Name *" slug="billing_first_name">
           <kemet-input
             required
-            validate-on-blur
             slot="input"
             name="billing_first_name"
             rounded="md"
@@ -910,7 +1086,6 @@ export class LaszCheckout extends LitElement {
         <kemet-field label="Last Name *" slug="billing_last_name">
           <kemet-input
             required
-            validate-on-blur
             slot="input"
             name="billing_last_name"
             rounded="md"
@@ -924,7 +1099,6 @@ export class LaszCheckout extends LitElement {
           <kemet-field label="Email *" slug="billing_email">
           <kemet-input
             required
-            validate-on-blur
             slot="input"
             name="billing_email"
             rounded="md"
@@ -950,7 +1124,6 @@ export class LaszCheckout extends LitElement {
         <kemet-field label="Address *" slug="billing_address_1">
           <kemet-input
             required
-            validate-on-blur
             slot="input"
             name="billing_address_1"
             rounded="md"
@@ -976,7 +1149,6 @@ export class LaszCheckout extends LitElement {
         <kemet-field label="City *" slug="billing_city">
           <kemet-input
             required
-            validate-on-blur
             slot="input"
             name="billing_city"
             rounded="md"
@@ -987,7 +1159,6 @@ export class LaszCheckout extends LitElement {
         <kemet-field label="State *" slug="billing_state">
           <kemet-select
             required
-            validate-on-blur
             slot="input"
             name="billing_state"
             rounded="md"
@@ -1002,7 +1173,6 @@ export class LaszCheckout extends LitElement {
         <kemet-field label="Zipcode *" slug="billing_postcode">
           <kemet-input
             required
-            validate-on-blur
             slot="input"
             name="billing_postcode"
             rounded="md"
@@ -1070,12 +1240,8 @@ export class LaszCheckout extends LitElement {
 
     return html`
       <lasz-checkout-payment>
-        <h3>Payment Method</h3>
-        <kemet-tabs divider>
-          ${this.paymentMethods.map(method => html`<kemet-tab slot="tab">${method.title}</kemet-tab>`)}
-          ${this.paymentMethods.map(method => html`<kemet-tab-panel slot="panel">${this.makePaymentDetails(method.id)}</kemet-tab-panel>`)}
-        </kemet-tabs>
-
+        <h3>Payment</h3>
+        ${this.makePaymentDetails('stripe')}
         <br /><br />
 
         <kemet-field label="Order Notes (Optional)" slug="customer_note">

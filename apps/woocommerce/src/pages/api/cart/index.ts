@@ -11,15 +11,38 @@ export const GET: APIRoute = async ({ request }) => {
       headers: request.headers,
     };
 
+    console.log('Fetching WooCommerce cart:', `${API_URL}/wp-json/wc/store/v1/cart`);
     const response = await fetch(`${API_URL}/wp-json/wc/store/v1/cart`, options);
+    console.log('WooCommerce cart response status:', response.status);
+
     const responseData = await response.json();
+    console.log('WooCommerce cart response data:', responseData);
+
+    // Log all response headers to debug nonce extraction
+    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       console.error('Cart API error:', responseData);
-      return new Response(JSON.stringify({ message: responseData.message || 'Failed to get cart.' }), { status: responseData.data.status || 400 });
+      return new Response(JSON.stringify({ message: responseData.message || 'Failed to get cart.' }), { status: response.status || 400 });
     }
 
-    return new Response(JSON.stringify(responseData), { status: 200 });
+    // Extract nonce and cart token from WooCommerce response and include it in the response
+    const nonce = response.headers.get('nonce') || response.headers.get('X-WC-Store-API-Nonce');
+    const cartToken = response.headers.get('cart-token') || response.headers.get('Cart-Token');
+
+    console.log('Extracted nonce from header:', nonce);
+    console.log('Nonce in response data:', responseData.nonce);
+    console.log('Extracted cart token from header:', cartToken);
+
+    const responseDataWithNonce = {
+      ...responseData,
+      nonce: nonce || responseData.nonce,
+      cartToken: cartToken
+    };
+
+    console.log('Final response with nonce:', responseDataWithNonce.nonce);
+    console.log('Final response with cart token:', responseDataWithNonce.cartToken);
+    return new Response(JSON.stringify(responseDataWithNonce), { status: 200 });
 
   } catch (error) {
     console.error('Cart API error:', error);

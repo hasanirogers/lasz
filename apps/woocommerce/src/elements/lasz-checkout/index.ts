@@ -35,7 +35,7 @@ interface CheckoutForm {
   payment_method: string;
   create_account: boolean;
   user_pass: string;
-  ship_to_different_address: boolean;
+  different_billing_address: boolean;
   card_number: string;
   card_expiry: string;
   card_cvc: string;
@@ -75,7 +75,8 @@ export class LaszCheckout extends LitElement {
     getShippingCost: CartStore['getShippingCost'],
     getTaxCost: CartStore['getTaxCost'],
     getCurrencySymbol: CartStore['getCurrencySymbol'],
-    clearCart: CartStore['clearCart']
+    clearCart: CartStore['clearCart'],
+    updateCustomer: CartStore['updateCustomer']
   }>;
 
   private alertController: ZustandController<IAlertStore, {
@@ -108,7 +109,7 @@ export class LaszCheckout extends LitElement {
     payment_method: 'stripe',
     create_account: false,
     user_pass: '',
-    ship_to_different_address: false,
+    different_billing_address: false,
     card_number: '',
     card_expiry: '',
     card_cvc: '',
@@ -199,7 +200,8 @@ export class LaszCheckout extends LitElement {
         getShippingCost: state.getShippingCost,
         getTaxCost: state.getTaxCost,
         getCurrencySymbol: state.getCurrencySymbol,
-        clearCart: state.clearCart
+        clearCart: state.clearCart,
+        updateCustomer: state.updateCustomer
       })
     );
 
@@ -223,7 +225,11 @@ export class LaszCheckout extends LitElement {
   updated(changedProperties: Map<string, any>) {
     // Re-render when form data changes to update shipping/tax calculations
     if (changedProperties.has('formData')) {
-      console.log('has form data');
+      this.cartController.actions?.updateCustomer({
+        shipping_address: {
+          state: this.formData.shipping_state
+        }
+      });
       this.requestUpdate();
     }
 
@@ -361,7 +367,7 @@ export class LaszCheckout extends LitElement {
     const { items } = this.cartController.data;
     const subtotal = this.cartController.actions?.getSubtotal() || '0.00';
     const shippingCost = this.cartController.actions?.getShippingCost(false) || '0.00';
-    const taxCost = this.cartController.actions?.getTaxCost(false, '') || '0.00';
+    const taxCost = this.cartController.actions?.getTaxCost(this.formData.billing_state) || '0.00';
     const grandTotal = (parseFloat(subtotal) + parseFloat(shippingCost) + parseFloat(taxCost)).toFixed(2);
 
     // Create payment request
@@ -490,8 +496,6 @@ export class LaszCheckout extends LitElement {
         [name]: value
       };
     }
-
-    console.log('Form data updated:', this.formData);
   }
 
   private handleSavedPaymentMethodChange(token: string | null) {
@@ -681,7 +685,7 @@ export class LaszCheckout extends LitElement {
           email: this.formData.billing_email,
           phone: this.formData.billing_phone
         },
-        shipping_address: this.formData.ship_to_different_address ? {
+        shipping_address: this.formData.different_billing_address ? {
           first_name: this.formData.shipping_first_name,
           last_name: this.formData.shipping_last_name,
           company: '', // Add empty company field
@@ -1014,8 +1018,9 @@ export class LaszCheckout extends LitElement {
               .value=${this.formData.shipping_state}
               @kemet-change=${this.handleInputChange}
             >
+              <kemet-option value="" label="Select a state" ?selected=${!this.formData.shipping_state}></kemet-option>
               ${usStates.map(state => html`
-                <kemet-option value=${state.value} label=${state.label}></kemet-option>
+                <kemet-option value=${state.value} label=${state.label} ?selected=${state.value === this.formData.shipping_state}></kemet-option>
               `)}
             </kemet-select>
           </kemet-field>
@@ -1037,14 +1042,14 @@ export class LaszCheckout extends LitElement {
   private makeDetails() {
     return html`
       <lasz-checkout-details>
-        ${this.makeBilling()}
+        ${this.makeShipping()}
         ${this.userController.data.isLoggedIn
           ? ''
           : html`<kemet-checkbox label="Use billing details to save an account?" name="create_account" .checked=${this.formData.create_account} @kemet-change=${this.handleInputChange}></kemet-checkbox><br />`
         }
         ${this.formData.create_account ? this.makePassword() : ''}
-        <kemet-checkbox label="Ship to a different address?" name="ship_to_different_address" .checked=${this.formData.ship_to_different_address} @kemet-change=${this.handleInputChange}></kemet-checkbox>
-        ${this.formData.ship_to_different_address ? this.makeShipping() : ''}
+        <kemet-checkbox label="Use different billing address?" name="different_billing_address" .checked=${this.formData.different_billing_address} @kemet-change=${this.handleInputChange}></kemet-checkbox>
+        ${this.formData.different_billing_address ? this.makeBilling() : ''}
         ${this.makePaymentMethod()}
       </lasz-checkout-details>
     `;
@@ -1188,7 +1193,7 @@ export class LaszCheckout extends LitElement {
     const { items } = this.cartController.data;
     const subtotal = this.cartController.actions?.getSubtotal() || '0.00';
     const shippingCost = this.cartController.actions?.getShippingCost(false) || '0.00';
-    const taxCost = this.cartController.actions?.getTaxCost(false, '') || '0.00';
+    const taxCost = this.cartController.actions?.getTaxCost(this.formData.billing_state) || '0.00';
     const currencySymbol = this.cartController.actions?.getCurrencySymbol() || '$';
     const grandTotal = (parseFloat(subtotal) + parseFloat(shippingCost) + parseFloat(taxCost)).toFixed(2);
 
@@ -1215,10 +1220,12 @@ export class LaszCheckout extends LitElement {
             <span>Shipping:</span>
             <span>${currencySymbol}${shippingCost}</span>
           </div>
-          <div class="row">
-            <span>Tax:</span>
-            <span>${currencySymbol}${taxCost}</span>
-          </div>
+          ${taxCost !== '0.00' ? html`
+            <div class="row">
+              <span>Tax:</span>
+              <span>${currencySymbol}${taxCost}</span>
+            </div>
+          ` : ''}
           <div class="row grand">
             <span>Total:</span>
             <span>${currencySymbol}${grandTotal}</span>

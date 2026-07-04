@@ -16,7 +16,7 @@ export interface IUserStore {
   logout: () => void;
 }
 
-const API_URL = import.meta.env.PUBLIC_API_URL;
+// const API_URL = import.meta.env.PUBLIC_API_URL;
 
 const getProfile = async () => {
   const user = Cookies.get('lasz-user') ? JSON.parse(Cookies.get('lasz-user') || '') : undefined;

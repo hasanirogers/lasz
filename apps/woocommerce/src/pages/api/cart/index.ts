@@ -11,15 +11,8 @@ export const GET: APIRoute = async ({ request }) => {
       headers: request.headers,
     };
 
-    console.log('Fetching WooCommerce cart:', `${API_URL}/wp-json/wc/store/v1/cart`);
     const response = await fetch(`${API_URL}/wp-json/wc/store/v1/cart`, options);
-    console.log('WooCommerce cart response status:', response.status);
-
     const responseData = await response.json();
-    console.log('WooCommerce cart response data:', responseData);
-
-    // Log all response headers to debug nonce extraction
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       console.error('Cart API error:', responseData);

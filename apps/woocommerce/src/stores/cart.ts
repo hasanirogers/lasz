@@ -1,5 +1,6 @@
 import { createStore } from 'zustand/vanilla';
-import { stateTaxRates } from '../shared/data';
+//import { stateTaxRates } from '../shared/data';
+import userStore from './user';
 
 const CART_STORAGE_KEY = 'lasz-cart-data';
 const CART_TOKEN_KEY = 'lasz-cart-token';
@@ -57,6 +58,8 @@ export interface CartState {
     taxes: string;
     selected: boolean;
   }> | null;
+  billingAddress: any | null;
+  shippingAddress: any | null;
 }
 
 export interface CartActions {
@@ -71,20 +74,28 @@ export interface CartActions {
   saveCart: () => void;
   getTotal: () => string;
   getShippingCost: (hasAddressInfo?: boolean) => string;
-  getTaxCost: (hasAddressInfo?: boolean, stateCode?: string) => string;
+  getTaxCost: (stateCode?: string) => string | null;
   getSubtotal: () => string;
   getCurrencySymbol: () => string;
+  updateCustomer: (customerData: any) => Promise<void>;
 }
 
 export interface CartStore extends CartState, CartActions {}
 
-const PUBLIC_API_URL = import.meta.env.PUBLIC_API_URL;
-
-const saveCartToStorage = (items: CartItem[], total: string, cartToken: string | null, nonce: string | null) => {
+const saveCartToStorage = (
+  items: CartItem[],
+  total: string,
+  cartToken: string | null,
+  nonce: string | null,
+  billingAddress: any | null = null,
+  shippingAddress: any | null = null
+) => {
   // Check if we're in a browser environment
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
     return;
   }
+
+  const addresses = userStore.getState().addresses;
 
   try {
     const cartData = {
@@ -92,7 +103,9 @@ const saveCartToStorage = (items: CartItem[], total: string, cartToken: string |
       total,
       cartToken,
       nonce,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      billing_address: billingAddress ?? addresses.billing ?? '',
+      shipping_address: shippingAddress ?? addresses.shipping ?? ''
     };
     localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData));
     if (cartToken) {
@@ -106,14 +119,15 @@ const saveCartToStorage = (items: CartItem[], total: string, cartToken: string |
   }
 };
 
-const loadCartFromStorage = () => {
-  // Check if we're in a browser environment
+const loadCartFromStorage = (): PersistedCartData => {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
     return {
       items: [],
       total: '0',
       cartToken: null,
-      nonce: null
+      nonce: null,
+      billing_address: null,
+      shipping_address: null
     };
   }
 
@@ -132,7 +146,9 @@ const loadCartFromStorage = () => {
           items: cartData.items || [],
           total: cartData.total || '0',
           cartToken: storedToken || cartData.cartToken || null,
-          nonce: storedNonce || cartData.nonce || null
+          nonce: storedNonce || cartData.nonce || null,
+          billing_address: cartData.billing_address || null,
+          shipping_address: cartData.shipping_address || null
         };
       } else {
         // Clear old cart data
@@ -146,7 +162,9 @@ const loadCartFromStorage = () => {
       items: [],
       total: '0',
       cartToken: storedToken || null,
-      nonce: storedNonce || null
+      nonce: storedNonce || null,
+      billing_address: null,
+      shipping_address: null
     };
   } catch (error) {
     console.warn('Failed to load cart from localStorage:', error);
@@ -154,10 +172,21 @@ const loadCartFromStorage = () => {
       items: [],
       total: '0',
       cartToken: null,
-      nonce: null
+      nonce: null,
+      billing_address: null,
+      shipping_address: null
     };
   }
 };
+
+interface PersistedCartData {
+  items: CartItem[];
+  total: string;
+  cartToken: string | null;
+  nonce: string | null;
+  billing_address: any | null;
+  shipping_address: any | null;
+}
 
 const clearCartFromStorage = () => {
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
@@ -189,6 +218,8 @@ const store = createStore<CartStore>((set, get) => ({
   nonce: persistedData.nonce,
   totals: null,
   shippingRates: null,
+  billingAddress: persistedData.billing_address || null,
+  shippingAddress: persistedData.shipping_address || null,
 
   setLoading: (loading: boolean) => set({ isLoading: loading }),
   setError: (error: string | null) => set({ error }),
@@ -256,9 +287,6 @@ const store = createStore<CartStore>((set, get) => ({
       const data = await response.json();
       const newCartToken = data.cartToken || response.headers.get('Cart-Token');
 
-      console.log('added item to cart', data.items);
-      console.log('Cart token from response:', newCartToken);
-
       set({
         items: data.items || [],
         total: data.totals?.total_price || data.totals_total || '0',
@@ -307,8 +335,6 @@ const store = createStore<CartStore>((set, get) => ({
 
       const data = await response.json();
       const newCartToken = data.cartToken || response.headers.get('Cart-Token');
-
-      console.log('Cart token from response:', newCartToken);
 
       set({
         items: data.items || [],
@@ -360,8 +386,6 @@ const store = createStore<CartStore>((set, get) => ({
       const data = await response.json();
       const newCartToken = data.cartToken || response.headers.get('Cart-Token');
 
-      console.log('Cart token from response:', newCartToken);
-
       set({
         items: data.items || [],
         total: data.totals?.total_price || data.totals_total || '0',
@@ -403,6 +427,57 @@ const store = createStore<CartStore>((set, get) => ({
     }
   },
 
+  updateCustomer: async (customerData: any) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const { cartToken } = get();
+      const headers: Record<string, string> = {};
+
+      if (cartToken) {
+        headers['Cart-Token'] = cartToken;
+      }
+
+      const response = await fetch(`/api/cart/customer/update`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(customerData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update customer');
+      }
+
+      const data = await response.json();
+      console.log('Customer update response:', data);
+      const newCartToken = data.cartToken || response.headers.get('Cart-Token');
+
+      set({
+        cartToken: newCartToken || cartToken,
+        isLoading: false,
+        totals: data.totals,
+        billingAddress: data.billing_address,
+        shippingAddress: data.shipping_address
+      });
+
+      // Save to localStorage after successful API call
+      const { items, total, cartToken: updatedToken, nonce: currentNonce } = get();
+      saveCartToStorage(
+        items,
+        total,
+        updatedToken,
+        currentNonce,
+        customerData.billing_address,
+        customerData.shipping_address
+      );
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to update customer',
+        isLoading: false
+      });
+    }
+  },
+
   fetchCart: async () => {
     set({ isLoading: true, error: null });
 
@@ -414,6 +489,17 @@ const store = createStore<CartStore>((set, get) => ({
         headers['Cart-Token'] = cartToken;
       }
 
+      const { updateCustomer, billingAddress, shippingAddress, items: currentItems } = get();
+
+      if (billingAddress || shippingAddress) {
+        await updateCustomer({
+          billing_address: billingAddress,
+          shipping_address: shippingAddress
+        });
+      } else {
+        console.log('No address data to update');
+      }
+
       const response = await fetch(`/api/cart`, {
         headers,
       });
@@ -423,10 +509,8 @@ const store = createStore<CartStore>((set, get) => ({
       }
 
       const data = await response.json();
+      console.log('Cart data:', data);
       const newCartToken = data.cartToken || response.headers.get('Cart-Token');
-
-      console.log('will set items from fetchCart', data.items);
-      console.log('Cart token from response:', newCartToken);
 
       set({
         items: data.items || [],
@@ -481,18 +565,14 @@ const store = createStore<CartStore>((set, get) => ({
     return '0.00';
   },
 
-  getTaxCost: (hasAddressInfo = false, stateCode = '') => {
-    const { totals, items } = get();
+  getTaxCost: (stateCode = '') => {
+    const { totals, updateCustomer } = get();
+
     if (totals?.total_tax && parseFloat(totals.total_tax) > 0) {
       return (parseFloat(totals.total_tax) * 0.01).toFixed(2);
     }
-    // Only calculate tax if there are items in cart AND user has entered address info
-    if (items.length > 0 && hasAddressInfo && stateCode) {
-      const subtotal = (items.reduce((total, item) => total + (parseFloat(item.prices.price) * item.quantity), 0) * 0.01).toFixed(2);
-      const taxRate = stateTaxRates[stateCode.toUpperCase()] || 0;
-      return (parseFloat(subtotal) * taxRate).toFixed(2);
-    }
-    return '0.00';
+
+    return null;
   },
 
   getSubtotal: () => {

@@ -1,30 +1,36 @@
 ---
-// import { Image } from 'astro:assets';
-// import LASZLogo from '../../public/logo.webp';
-
+import Alert from '../components/Alert.astro';
 import Hero from '../components/Hero.astro';
 import OnSaleProducts from '../components/OnSaleProducts.astro';
 import BestSellers from '../components/BestSellers.astro';
 import PopularCategories from '../components/PopularCategories.astro';
 import InfoCons from '../components/InfoCons.astro';
 
-
-
 const API_URL = import.meta.env.PUBLIC_API_URL;
 const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
 
-const theContentResponse = await fetch(`${REST_WP_URL}/pages?slug=homepage`);
-const theContentData = await theContentResponse.json();
+let theContentData;
+let errorMessage = '';
+
+try {
+  const theContentResponse = await fetch(`${REST_WP_URL}/pages?slug=homepage`);
+  theContentData = await theContentResponse.json();
+} catch (error) {
+  console.error('Error fetching homepage content:', error);
+  errorMessage = 'Unable to communicate with the store. Please check your connection or try again later.';
+}
+
+const renderedContent = theContentData && theContentData[0] ? theContentData[0].content.rendered : '';
 ---
 
 <lasz-page-main>
+  {errorMessage && <Alert message={errorMessage} />}
   <Hero />
   <OnSaleProducts />
   <BestSellers />
   <PopularCategories />
   <InfoCons />
-  <Fragment set:html={theContentData[0].content.rendered} />
-  <!-- <Image src={LASZLogo} width={196} height={208} alt="LASZ stack logo" /> -->
+  <Fragment set:html={renderedContent} />
 </lasz-page-main>
 
 

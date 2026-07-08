@@ -10,13 +10,6 @@ import '../styles/cea.css';
 import '../styles/wordpress.css';
 
 const { title = 'LaszCommerce' } = Astro.props;
-
-// const API_URL = import.meta.env.PUBLIC_API_URL;
-// const REST_CUSTOM_URL = `${API_URL}/wp-json/lasz-woocommerce/v1`;
-// const siteLogoData = await fetch(`${REST_CUSTOM_URL}/theme/logo`);
-// console.log(siteLogoData);
-// const siteLogoFull = (await siteLogoData.json()).full ?? '/logo.webp';
-
 const isLoggedIn = !!Astro.cookies.get('lasz-user');
 ---
 

@@ -10,8 +10,16 @@ const API_URL = import.meta.env.PUBLIC_API_URL;
 const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
 
 // popluar = count of items in category
-const categoriesResponse = await fetch(`${REST_WC_URL}/products/categories?per_page=${limit}&orderby=count&order=desc&hide_empty=${hideEmpty}`);
-const allCategories = await categoriesResponse.json();
+let allCategories: any[] = [];
+
+try {
+  const categoriesResponse = await fetch(`${REST_WC_URL}/products/categories?per_page=${limit}&orderby=count&order=desc&hide_empty=${hideEmpty}`);
+  if (categoriesResponse.ok) {
+    allCategories = await categoriesResponse.json();
+  }
+} catch (error) {
+  console.error('Error fetching categories:', error);
+}
 
 const categories = allCategories
   .filter((category: any) => category.id !== 1 && category.slug !== 'uncategorized')

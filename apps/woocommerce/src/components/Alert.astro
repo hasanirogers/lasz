@@ -1,0 +1,17 @@
+---
+const { message, status = 'error', icon = 'exclamation-circle' } = Astro.props;
+---
+
+<lasz-page-container>
+  <section>
+    <kemet-alert status={status} opened border-status="left">
+      {icon && <kemet-icon-bootstrap slot="icon" icon={icon} size="32"></kemet-icon-bootstrap>}
+      {message}
+    </kemet-alert>
+  </section>
+</lasz-page-container>
+<style>
+  kemet-alert {
+    margin-top: 4rem;
+  }
+</style>

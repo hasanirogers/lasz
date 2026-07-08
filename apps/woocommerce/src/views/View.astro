@@ -1,15 +1,26 @@
 ---
+import Alert from "../components/Alert.astro";
+
 const { slug } = Astro.params;
 
 const API_URL = import.meta.env.PUBLIC_API_URL;
 const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
 
-const theContentResponse = await fetch(`${REST_WP_URL}/pages?slug=${slug}`);
-const theContentData = await theContentResponse.json();
-const theContent = theContentData[0]?.content?.rendered ?? null;
+let theContentRendered = null;
+
+try {
+  const theContentResponse = await fetch(`${REST_WP_URL}/pages?slug=${slug}`);
+  const theContentData = await theContentResponse.json();
+  theContentRendered = theContentData[0]?.content?.rendered ?? null;
+} catch (error) {
+  console.error('Error fetching page content:', error);
+  theContentRendered = null;
+}
 
 ---
 
 <lasz-page-main>
-  <Fragment set:html={theContent} />
+  {theContentRendered
+    ? <Fragment set:html={theContentRendered} />
+    : <Alert message="There was an error communicating with the store." />}
 </lasz-page-main>

@@ -2,8 +2,16 @@
 const API_URL = import.meta.env.PUBLIC_API_URL;
 const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
 
-const onSaleProductsResponse = await fetch(`${REST_WC_URL}/products?on_sale=true`);
-const onSaleProducts = await onSaleProductsResponse.json();
+let onSaleProducts: any[] = [];
+
+try {
+  const onSaleProductsResponse = await fetch(`${REST_WC_URL}/products?on_sale=true`);
+  if (onSaleProductsResponse.ok) {
+    onSaleProducts = await onSaleProductsResponse.json();
+  }
+} catch (error) {
+  console.error('Error fetching on sale products:', error);
+}
 
 ---
 {onSaleProducts.length > 0 && (

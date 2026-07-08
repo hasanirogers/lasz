@@ -189,6 +189,13 @@ export class LaszLogin extends LitElement {
           this.userController.actions?.login(response);
           window.location.href = '/account';
         }
+
+        this.alertController.actions?.setConfig({
+          status: 'error',
+          message: 'There was a problem logging you in. Check your credentials and try again.',
+          opened: true,
+          icon: 'exclamation-circle'
+        });
       })
       .catch(() => {
         this.alertController.actions?.setConfig({
@@ -292,6 +299,14 @@ export class LaszLogin extends LitElement {
             icon: 'exclamation-circle'
           });
         }
+      })
+      .catch(() => {
+        this.alertController.actions?.setConfig({
+          status: 'error',
+          message: 'There was an unknown problem while resetting your password.',
+          opened: true,
+          icon: 'exclamation-circle'
+        });
       });
   }
 

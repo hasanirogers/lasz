@@ -21,9 +21,15 @@ if (Array.from(validSortOptions.keys()).includes(orderBy)) {
   sort = orderBy;
 }
 
-const categoriesResponse = await fetch(`${REST_WC_URL}/products/categories?slug=${slug}`);
-const categoriesData = await categoriesResponse.json();
-const category = categoriesData.find((cat: any) => cat.slug === slug); // wc loose matches so we need to be string about the slug matching
+let category: any;
+
+try {
+  const categoriesResponse = await fetch(`${REST_WC_URL}/products/categories?slug=${slug}`);
+  const categoriesData = await categoriesResponse.json();
+  category = categoriesData.find((cat: any) => cat.slug === slug); // wc loose matches so we need to be string about the slug matching
+} catch (error) {
+  console.error('Error fetching categories:', error);
+}
 
 let products = [];
 

@@ -5,21 +5,63 @@ import type { MenuItem } from '../shared/interfaces';
 const API_URL = import.meta.env.PUBLIC_API_URL;
 const REST_CUSTOM_URL = `${API_URL}/wp-json/lasz-woocommerce/v1`;
 
-const siteLogoData = await fetch(`${REST_CUSTOM_URL}/theme/logo`);
-const siteLogoFull = (await siteLogoData.json()).full ?? '/logo.webp';
+let siteLogoFull = '/logo.webp';
+let siteName = 'LaszCommerce';
+let legalMenuData: any[] = [];
+let usefulLinksMenuData: any[] = [];
+let themeMods: Record<string, string> = {};
 
-const blogInfoData = await fetch(`${REST_CUSTOM_URL}/theme/info`);
-const blogInfo = await blogInfoData.json();
-const siteName = blogInfo.name;
+try {
+  const siteLogoData = await fetch(`${REST_CUSTOM_URL}/theme/logo`);
+  if (!siteLogoData.ok) throw new Error(`Failed to fetch logo: ${siteLogoData.status}`);
+  siteLogoFull = (await siteLogoData.json()).full ?? '/logo.webp';
+} catch (error) {
+  console.error('Error fetching site logo:', error);
+  console.error('PUBLIC_API_URL may be incorrect. Current value:', API_URL);
+}
 
-const legalMenuResponse = await fetch(`${REST_CUSTOM_URL}/nav/legal`);
-const legalMenuData = await legalMenuResponse.json();
+try {
+  const blogInfoData = await fetch(`${REST_CUSTOM_URL}/theme/info`);
+  if (!blogInfoData.ok) throw new Error(`Failed to fetch blog info: ${blogInfoData.status}`);
+  const blogInfo = await blogInfoData.json();
+  siteName = blogInfo.name;
+} catch (error) {
+  console.error('Error fetching blog info:', error);
+  console.error('PUBLIC_API_URL may be incorrect. Current value:', API_URL);
+}
 
-const usefulLinksMenuResponse = await fetch(`${REST_CUSTOM_URL}/nav/useful-links`);
-const usefulLinksMenuData = await usefulLinksMenuResponse.json();
+try {
+  const legalMenuResponse = await fetch(`${REST_CUSTOM_URL}/nav/legal`);
+  if (!legalMenuResponse.ok) throw new Error(`Failed to fetch legal menu: ${legalMenuResponse.status}`);
+  legalMenuData = await legalMenuResponse.json();
+} catch (error) {
+  console.error('Error fetching legal menu:', error);
+  console.error('PUBLIC_API_URL may be incorrect. Current value:', API_URL);
+}
 
-const themeModsResponse = await fetch(`${REST_CUSTOM_URL}/theme/mods`);
-const themeMods = await themeModsResponse.json();
+try {
+  const usefulLinksMenuResponse = await fetch(`${REST_CUSTOM_URL}/nav/useful-links`);
+  if (!usefulLinksMenuResponse.ok) throw new Error(`Failed to fetch useful links: ${usefulLinksMenuResponse.status}`);
+  usefulLinksMenuData = await usefulLinksMenuResponse.json();
+} catch (error) {
+  console.error('Error fetching useful links:', error);
+  console.error('PUBLIC_API_URL may be incorrect. Current value:', API_URL);
+}
+
+try {
+  const themeModsResponse = await fetch(`${REST_CUSTOM_URL}/theme/mods`);
+  if (!themeModsResponse.ok) throw new Error(`Failed to fetch theme mods: ${themeModsResponse.status}`);
+  themeMods = await themeModsResponse.json();
+} catch (error) {
+  console.error('Error fetching theme mods:', error);
+  console.error('PUBLIC_API_URL may be incorrect. Current value:', API_URL);
+}
+
+const showReachOut =
+  !!themeMods['headquarters-address'] &&
+  !!themeMods['headquarters-address-link'] &&
+  !!themeMods['primary-phone'] &&
+  !!themeMods['primary-email'];
 ---
 
 <NewsletterForm />
@@ -32,41 +74,45 @@ const themeMods = await themeModsResponse.json();
       </h3>
       <p>Condimentum adipiscing vel neque dis nam parturient orci at scelerisque neque dis nam.</p>
     </div>
-    <div class="reach">
-      <h3>Reach Out</h3>
-      <ul>
-        <li>
-          <kemet-icon-bootstrap icon="geo-alt" size="24"></kemet-icon-bootstrap>
-          <a href={themeMods['headquarters-address-link']} target="_blank">
-            {themeMods['headquarters-address']}
-          </a>
-        </li>
-        <li>
-          <kemet-icon-bootstrap icon="phone" size="24"></kemet-icon-bootstrap>
-          <a href={`tel:${themeMods['primary-phone']}`}> {themeMods['primary-phone']}</a>
-        </li>
-        <li>
-          <kemet-icon-bootstrap icon="envelope" size="24"></kemet-icon-bootstrap>
-          <a href={`mailto:${themeMods['primary-email']}`}>
-            {themeMods['primary-email']}
-          </a>
-        </li>
-      </ul>
-    </div>
-    <div class="useful">
-      <h3>Useful Links</h3>
-      <ul>
-        {
-          usefulLinksMenuData.map((item: MenuItem) => (
-            <li>
-              <a id={`menu-item-${item.id}`} href={item.url}>
-                {item.title}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
+    {showReachOut && (
+      <div class="reach">
+        <h3>Reach Out</h3>
+        <ul>
+          <li>
+            <kemet-icon-bootstrap icon="geo-alt" size="24"></kemet-icon-bootstrap>
+            <a href={themeMods['headquarters-address-link']} target="_blank">
+              {themeMods['headquarters-address']}
+            </a>
+          </li>
+          <li>
+            <kemet-icon-bootstrap icon="phone" size="24"></kemet-icon-bootstrap>
+            <a href={`tel:${themeMods['primary-phone']}`}> {themeMods['primary-phone']}</a>
+          </li>
+          <li>
+            <kemet-icon-bootstrap icon="envelope" size="24"></kemet-icon-bootstrap>
+            <a href={`mailto:${themeMods['primary-email']}`}>
+              {themeMods['primary-email']}
+            </a>
+          </li>
+        </ul>
+      </div>
+    )}
+    {usefulLinksMenuData.length > 0 && (
+      <div class="useful">
+        <h3>Useful Links</h3>
+        <ul>
+          {
+            usefulLinksMenuData.map((item: MenuItem) => (
+              <li>
+                <a id={`menu-item-${item.id}`} href={item.url}>
+                  {item.title}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    )}
     <div class="extras">
       <h3>Social Links</h3>
       <ul class="social">

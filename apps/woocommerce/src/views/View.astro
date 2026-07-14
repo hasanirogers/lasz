@@ -1,5 +1,6 @@
 ---
 import Alert from "../components/Alert.astro";
+import Redirect from "../components/Redirect.astro";
 
 const { slug } = Astro.params;
 
@@ -7,6 +8,7 @@ const API_URL = import.meta.env.PUBLIC_API_URL;
 const REST_WP_URL = `${API_URL}/wp-json/wp/v2`;
 
 let theContentRendered = null;
+let networkError: boolean | undefined;
 
 try {
   const theContentResponse = await fetch(`${REST_WP_URL}/pages?slug=${slug}`);
@@ -15,12 +17,12 @@ try {
 } catch (error) {
   console.error('Error fetching page content:', error);
   theContentRendered = null;
+  networkError = true;
 }
-
 ---
 
 <lasz-page-main>
-  {theContentRendered
-    ? <Fragment set:html={theContentRendered} />
-    : <Alert message="There was an error communicating with the store." />}
+  {networkError && <Alert message="There was an error communicating with the store." />}
+  {theContentRendered && <Fragment set:html={theContentRendered} />}
+  {!networkError && !theContentRendered && <Redirect to="/404" />}
 </lasz-page-main>

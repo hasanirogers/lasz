@@ -46,7 +46,7 @@ export default class LaszNavTop extends LitElement {
 
   handleSearch(event: any) {
     event.preventDefault();
-    window.location.href = `${window.location.origin}/?s=${encodeURI(this.input?.value || '')}&post_type=product`;
+    window.location.href = `${window.location.origin}/search?query=${encodeURI(this.input?.value || '')}`;
   }
 
   handleKeyPress(event: any) {

@@ -1,0 +1,90 @@
+---
+import Redirect from "../components/Redirect.astro";
+
+const API_URL = import.meta.env.PUBLIC_API_URL;
+const REST_WC_URL = `${API_URL}/wp-json/wc/store/v1`;
+
+const searchParams = Astro.url.searchParams;
+const query = searchParams.get('query') ?? '';
+const orderBy = searchParams.get('orderby') ?? 'popularity';
+
+const validSortOptions = new Map([
+  ['popularity', 'Popularity'],
+  ['rating', 'Rating'],
+  ['date', 'Latest'],
+  ['price', 'Price'],
+  ['title', 'Title'],
+]);
+
+let sort = 'popularity';
+
+if (Array.from(validSortOptions.keys()).includes(orderBy)) {
+  sort = orderBy;
+}
+
+let category: any;
+let products: any[] = [];
+
+try {
+  const categoriesResponse = await fetch(`${REST_WC_URL}/products/categories`);
+  const categoriesData = await categoriesResponse.json();
+  category = categoriesData.find((cat: any) => cat.slug === query);
+
+  const searchParam = category ? `category=${category.id}` : `search=${query}`;
+  const orderByParam = sort ? `&orderby=${sort}` : '';
+  const productsResponse = await fetch(`${REST_WC_URL}/products?${searchParam}${orderByParam}`);
+  products = await productsResponse.json();
+} catch (error) {
+  console.error('Error fetching products:', error);
+}
+---
+
+<lasz-page-main>
+  <lasz-page-container>
+    <section>
+      {!!query ? (
+        <lasz-view-products>
+          <header>
+            <h2>{category ? category.name : `Searching for "${query}"`}</h2>
+            <kemet-field>
+              <kemet-select slot="input" name="orderby">
+                {Array.from(validSortOptions.entries()).map(([value, label]) => (
+                  <kemet-option label={label} value={value} {...(value === sort && { selected: true })}></kemet-option>
+                ))}
+              </kemet-select>
+            </kemet-field>
+          </header>
+          <hr /><br />
+          {products && products.length > 0 ? (
+            <lasz-products>
+              {products.map((product: any) => <lasz-product key={product.id} data={JSON.stringify(product)}></lasz-product>)}
+            </lasz-products>
+          ) : (
+            <p>Welp, looks like we couldn't find anything for "{query}".</p>
+          )}
+        </lasz-view-products>
+      ) : (
+        <br />
+        <Redirect to="/" />
+      )}
+    </section>
+  </lasz-page-container>
+</lasz-page-main>
+<script>
+  document.querySelector('kemet-select[name="orderby"]')?.addEventListener('kemet-change', (event) => {
+    const select = event.target as HTMLSelectElement;
+    const url = new URL(window.location.href);
+    url.searchParams.set('orderby', select.value);
+    window.location.href = url.href;
+  });
+</script>
+<style>
+  h2 {
+    padding-bottom: 1.5rem;
+  }
+
+  kemet-select {
+    position: relative;
+    top: -2rem;
+  }
+</style>

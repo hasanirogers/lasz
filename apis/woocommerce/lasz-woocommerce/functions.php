@@ -189,7 +189,7 @@ if (!class_exists('lasz_woocommerce\Theme')) {
       }
 
       // 3. If it's a normal visitor request, perform the redirect
-      $new_domain = 'https://temp.com';
+      $new_domain = 'https://belasz.dev';
       $destination = $new_domain . $request_uri;
 
       wp_redirect($destination, 301);

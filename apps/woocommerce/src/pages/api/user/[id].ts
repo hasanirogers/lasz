@@ -40,13 +40,15 @@ export const GET: APIRoute = async ({ params, request }) => {
 export const POST: APIRoute = async ({ params, request }) => {
   try {
     const { id } = params;
+    const body = await request.json();
 
     const options = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         authorization: request.headers.get('authorization') || ''
-      }
+      },
+      body: JSON.stringify(body)
     };
 
     if (!id) {

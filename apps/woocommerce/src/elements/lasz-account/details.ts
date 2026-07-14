@@ -27,10 +27,10 @@ export class LaszAccountDetails extends LitElement {
     setConfig: IAlertStore['setConfig'],
   }>;
 
-  @query('form[action*=user]')
+  @query('form#user')
   userForm!: HTMLFormElement;
 
-  @query('form[action*=change-password]')
+  @query('form#password')
   changePasswordForm!: HTMLFormElement;
 
   constructor() {
@@ -64,7 +64,7 @@ export class LaszAccountDetails extends LitElement {
     return html`
       <h2>Account Details</h2>
       <section>
-        <form @submit=${(event: SubmitEvent) => this.updateProfile(event)}>
+        <form id="user" @submit=${(event: SubmitEvent) => this.updateProfile(event)}>
           <fieldset>
             <legend>Your Profile</legend>
             <div>
@@ -91,7 +91,7 @@ export class LaszAccountDetails extends LitElement {
           </fieldset>
         </form>
 
-        <form @submit=${(event: SubmitEvent) => this.changePassword(event)}>
+        <form id="password" @submit=${(event: SubmitEvent) => this.changePassword(event)}>
           <fieldset>
             <legend>Change Password</legend>
             <p>
@@ -142,10 +142,31 @@ export class LaszAccountDetails extends LitElement {
       .then((response) => response.json())
       .catch((error) => console.error(error));
 
-    this.userController.actions?.updateProfile({
-      ...profile,
-      ...Object.fromEntries(formData)
-    });
+    console.log(!!profile.id);
+    console.log(profile);
+
+    if (!!profile.id) {
+      this.alertController.actions?.setConfig({
+        message: 'Profile updated successfully!',
+        status: 'success',
+        opened: true,
+        icon: 'check-lg'
+      });
+
+      this.userController.actions?.updateProfile({
+        ...profile,
+        ...Object.fromEntries(formData)
+      });
+
+      return;
+    }
+
+    this.alertController.actions?.setConfig({
+      message: 'There was an error updating your profile.',
+      status: 'error',
+      opened: true,
+      icon: 'exclamation-circle'
+    })
   }
 
   changePassword(event: SubmitEvent) {

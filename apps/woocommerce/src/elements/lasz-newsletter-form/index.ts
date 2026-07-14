@@ -1,16 +1,34 @@
 import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import styles from './style.css?inline';
+import { ZustandController } from '../../controllers/zustand';
+import userStore, { type IUserStore } from '../../stores/user';
 
 @customElement('lasz-newsletter-form')
 export default class LaszNewsletterForm extends LitElement {
   static styles = [unsafeCSS(styles)];
+
+  private userController: ZustandController<IUserStore, {
+    profile: IUserStore['profile'],
+  }, {}>;
 
   @property({ type: String, reflect: true })
   status: 'success' | 'error' | '' = '';
 
   @state()
   private message: string = '';
+
+  constructor() {
+    super();
+
+    this.userController = new ZustandController(
+      this,
+      userStore,
+      (state) => ({
+        profile: state.profile,
+      })
+    );
+  }
 
   render() {
     return html`
@@ -24,6 +42,7 @@ export default class LaszNewsletterForm extends LitElement {
             placeholder="Enter your email"
             filled
             required
+            .value=${this.userController.data.profile?.email || ''}
           />
         </kemet-field>
         <kemet-field slug="firstname" label="Your First Name">
@@ -35,6 +54,7 @@ export default class LaszNewsletterForm extends LitElement {
             placeholder="Enter your first name"
             filled
             required
+            .value=${this.userController.data.profile?.first_name || ''}
           />
         </kemet-field>
         <kemet-button type="submit" rounded="lg">

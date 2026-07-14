@@ -21,5 +21,5 @@ jobs:
           username: ${{ secrets.API_WOOCOMMERCE_USER }}
           password: ${{ secrets.API_WOOCOMMERCE_PASS }}
           port: ${{ secrets.FTP_DEPLOY_PORT }}
-          local-dir: "./lasz-woocommerce/"
+          local-dir: "./apis/woocommerce/lasz-woocommerce/"
           server-dir: "./wp-content/themes/lasz-woocommerce/"

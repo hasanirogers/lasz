@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:supabase": "turbo run build --filter=@lasz/supabase",
     "build:woocommerce": "turbo run build --filter=@lasz/woocommerce",
     "dev": "turbo run dev",
     "lint": "turbo run lint",

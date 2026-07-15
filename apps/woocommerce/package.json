@@ -7,7 +7,7 @@
     "dev": "astro dev --host --port 4321",
     "build": "astro build",
     "build:analyze": "astro build --analyze",
-    "ngrok": "ngrok http 4323",
+    "ngrok": "ngrok http 4321",
     "preview": "astro preview",
     "astro": "astro"
   },
@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.95.3",
     "@wordpress/block-library": "^9.43.0",
     "astro": "^5.17.1",
+    "js-cookie": "^3.0.8",
     "kemet-ui": "^4.1.0",
     "lit": "^3.3.2",
     "lodash-es": "^4.17.23",

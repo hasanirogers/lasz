@@ -1,0 +1,21 @@
+section {
+  padding: 1rem 2rem;
+}
+
+kemet-modal {
+  --kemet-modal-dialog-min-width: 480px;
+  --kemet-modal-dialog-color: rgb(var(--kemet-color-gray-100));
+  --kemet-modal-dialog-background-color: rgb(var(--kemet-color-gray-900));
+  --kemet-modal-dialog-padding: 1rem 2rem;
+}
+
+/* TODO: We found an error in Kemet UI! */
+/* This manual override is needed because the dialog part doesn't inherit the color properly */
+kemet-modal::part(dialog) {
+  color: var(--kemet-modal-dialog-color);
+}
+
+kemet-modal-close {
+  top: 1rem;
+  right: 1.5rem;
+}

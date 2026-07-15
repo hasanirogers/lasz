@@ -1,0 +1,102 @@
+a {
+  color: rgb(var(--color-white));
+  text-decoration: none;
+  transition: all 0.2s ease-in-out;
+}
+
+a:hover {
+  color: rgb(var(--kemet-blue-500));
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  color: inherit;
+  font-size: inherit;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+}
+
+h2 {
+  font-size: 2rem;
+  font-weight: 400;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: var(--app-border);
+}
+
+h3 {
+  font-size: 1.75rem;
+  font-weight: 400;
+}
+
+legend {
+  font-size: 2rem;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: var(--app-border);
+}
+
+cite {
+  font-size: 0.9rem;
+}
+
+figure {
+  margin: 0;
+  padding: 0;
+}
+
+hr {
+  opacity: 0.25;
+}
+
+a[href*='lostpassword'] {
+  display: none;
+}
+
+.profile-picture {
+  aspect-ratio: 1 / 1;
+  min-width: 48px;
+  border-radius: 50%;
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+ol.abc {
+  list-style-type: lower-alpha;
+}
+
+@media (min-width: 768px) {
+  kemet-tooltip {
+    --kemet-popper-width: 480px;
+  }
+}
+
+kemet-alert {
+  --kemet-alert-padding: 0.5rem 1rem;
+}
+
+kemet-alert[status="error"] {
+  --kemet-alert-border: 3px solid rgb(var(--kemet-color-error) / 20%);
+}
+
+kemet-alert[status="success"] {
+  --kemet-alert-border: 3px solid rgb(var(--kemet-color-success) / 20%);
+}
+
+
+

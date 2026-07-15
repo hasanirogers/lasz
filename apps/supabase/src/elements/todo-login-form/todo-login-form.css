@@ -1,0 +1,16 @@
+:host {
+  display: block;
+}
+
+form {
+  padding: 0.5rem;
+  display: flex;
+  gap: 2rem;
+  flex-direction: column;
+  justify-content: center;
+}
+
+h3 {
+  margin: 0;
+  padding: 0;
+}

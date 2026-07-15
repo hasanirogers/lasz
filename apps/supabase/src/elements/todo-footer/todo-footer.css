@@ -1,0 +1,9 @@
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+kemet-button {
+  --kemet-button-padding: 0.6rem 0.75rem;
+}

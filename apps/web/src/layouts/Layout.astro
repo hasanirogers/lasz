@@ -1,10 +1,13 @@
+---
+import '../styles/base.css';
+---
+
 <!doctype html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
+		<link rel="icon" type="image/webp" href="/logo.webp" />
 		<meta name="generator" content={Astro.generator} />
 		<title>Be lasz.</title>
 	</head>
@@ -16,8 +19,10 @@
 <style>
 	html,
 	body {
+    color: rgb(var(--text-color));
 		margin: 0;
 		width: 100%;
 		height: 100%;
+		background-color: rgb(var(--background-color));
 	}
 </style>

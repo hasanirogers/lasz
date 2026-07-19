@@ -1,0 +1,118 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import FormattedDate from '../../components/FormattedDate.astro';
+import { SITE_DESCRIPTION, SITE_TITLE } from '../../consts';
+import Layout from '../../layouts/Layout.astro';
+
+const posts = (await getCollection('blog')).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+---
+
+<Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <style>
+    main {
+      width: 960px;
+    }
+
+    lasz-blog-posts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+
+      @media (width < 720px) {
+        gap: 0.5em;
+      }
+    }
+
+    lasz-blog-post {
+      display: flex;
+      flex-direction: column;
+      width: calc(50% - 1rem);
+
+      lasz-blog-post * {
+        text-decoration: none;
+        transition: 0.2s ease;
+      }
+
+      &:first-child {
+        width: 100%;
+        margin-bottom: 1rem;
+        text-align: center;
+      }
+
+      &:first-child img {
+        width: 100%;
+      }
+
+      &:first-child .title {
+        font-size: 2.369rem;
+      }
+
+      img {
+        margin-bottom: 0.5rem;
+        border-radius: 12px;
+      }
+
+      a {
+        display: block;
+      }
+
+      a:hover h4,
+      a:hover .date {
+        color: rgb(var(--accent));
+      }
+
+      a:hover img {
+        box-shadow: var(--box-shadow);
+      }
+
+      .title {
+        margin: 0;
+        color: rgb(var(--black));
+        line-height: 1;
+      }
+
+      .date {
+        margin: 0;
+        color: rgb(var(--gray));
+      }
+
+      @media (width < 720px) {
+        width: 100%;
+        text-align: center;
+
+        &:first-child {
+          margin-bottom: 0;
+        }
+
+        &:first-child .title {
+          font-size: 1.563em;
+        }
+      }
+    }
+  </style>
+  <section>
+    <lasz-blog-posts>
+      {
+        posts.map((post) => (
+          <lasz-blog-post>
+            <a href={`/blog/${post.id}/`}>
+              {post.data.heroImage && (
+                <Image width={720} height={360} src={post.data.heroImage} alt="" />
+              )}
+              <h4 class="title">{post.data.title}</h4>
+              <p class="date">
+                <FormattedDate date={post.data.pubDate} />
+              </p>
+            </a>
+          </lasz-blog-post>
+        ))
+      }
+    </lasz-blog-posts>
+  </section>
+</Layout>

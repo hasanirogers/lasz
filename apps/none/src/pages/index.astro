@@ -1,0 +1,13 @@
+---
+import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <h1>Hello, LASZ dev!</h1>
+  <p>
+    Welcome to LASZ Blog. LASZ Blog is a demonstration of the LASZ stack without a system integration. This blog ships with <a href="https://lit.dev">Lit</a> for UI elements and <a href="https://zustand.js.org">Zustand</a> for state management as they are part of the stack.
+  </p>
+  <p>This blog only has one Lit Component, <code>lasz-hamburger</code>, which toggles the drawer in the app. The drawer itself is provided by <a href="https://kemet.dev">Kemet UI</a>. The opened state of the drawer is managed by Zustand. This serves as an introduction for working with the LASZ stack.</p>
+  <p>The LASZ stack encourages you to follow the <a href="https://dev.to/deificarts/the-new-bem-for-custom-elements-cea-4830">CEA (Component, Element, and Attribute)</a> pattern for organizing your UI Elements.</p>
+</Layout>

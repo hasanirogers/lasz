@@ -6,3 +6,5 @@ This is a monorepo for the LASZ project. It contains the following apps:
 - `apps/woocommerce` - A WooCommerce system integration.
 - `apps/woocommerce-api` - The WooCommerce headless API implementation.
 - `apps/supabase` - A Supabase system integration.
+- `apps/none` - A simple Astro blog without a system integration.
+

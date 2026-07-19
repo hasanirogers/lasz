@@ -8,6 +8,6 @@ export default defineConfig({
     port: 4321
   },
   adapter: node({
-    mode: 'middleware'
+    mode: 'standalone'
   }),
 });

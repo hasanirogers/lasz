@@ -6,4 +6,5 @@ const base = '/';
 app.use(base, express.static('dist/client/'));
 app.use(ssrHandler);
 
-app.listen(8080);
+const port = process.env.PORT || 4322;
+app.listen(port);

@@ -10,9 +10,9 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/node": "^9.5.3",
+    "@astrojs/node": "^11.0.2",
     "@supabase/supabase-js": "^2.95.3",
-    "astro": "^5.17.1",
+    "astro": "^7.1.1",
     "kemet-ui": "^4.1.0",
     "lit": "^3.3.2",
     "lodash-es": "^4.17.23",

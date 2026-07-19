@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.95.3",
     "@wordpress/block-library": "^9.43.0",
     "astro": "^5.17.1",
+    "express": "^4.22.0",
     "js-cookie": "^3.0.8",
     "kemet-ui": "^4.1.0",
     "lit": "^3.3.2",

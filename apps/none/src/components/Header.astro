@@ -1,0 +1,90 @@
+---
+import { SITE_TITLE } from '../consts';
+import HeaderLink from './HeaderLink.astro';
+import { Image } from 'astro:assets';
+---
+
+<header>
+	<nav>
+		<h2>
+      <Image src="/logo.webp" alt="LASZ Logo" width={50} height={50} />
+      <a href="/">{SITE_TITLE}</a>
+    </h2>
+		<lasz-internal-links>
+			<HeaderLink href="/">Home</HeaderLink>
+			<HeaderLink href="/blog">Blog</HeaderLink>
+			<HeaderLink href="/about">About</HeaderLink>
+		</lasz-internal-links>
+    <lasz-hamburger></lasz-hamburger>
+	</nav>
+</header>
+<script>
+  import '../elements/lasz-hamburger';
+  import 'kemet-ui/elements/drawer';
+  import appStore from '../stores/app';
+  import type HTMLKemetDrawerElement from 'kemet-ui/elements/drawer.d.ts';
+
+  const drawer = document.querySelector('kemet-drawer') as HTMLKemetDrawerElement;
+
+  appStore.subscribe((state) => {
+    drawer.opened = state.drawerOpened;
+  });
+</script>
+<style>
+	header {
+		margin: 0;
+		padding: 0.5rem 1rem;
+		background: white;
+		box-shadow: 0 2px 8px rgba(var(--black), 5%);
+	}
+
+	h2 {
+		font-size: 1.5rem;
+		display: flex;
+		align-items: center;
+		gap: 0.5em;
+    margin: 0;
+
+    a,
+    a.active {
+      color: var(--black);
+      text-decoration: none;
+    }
+	}
+
+	nav {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+  lasz-internal-links {
+    display: none;
+
+    a {
+      padding: 1em 0.5em;
+      color: var(--black);
+      border-bottom: 4px solid transparent;
+      text-decoration: none;
+    }
+
+    a.active {
+      text-decoration: none;
+      border-bottom-color: var(--accent);
+    }
+
+    @media screen and (width > 1024px) {
+      display: flex;
+    }
+  }
+
+  lasz-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    @media screen and (width > 1024px) {
+      display: none;
+    }
+  }
+</style>

@@ -8,6 +8,7 @@
     --kemet-color-primary: var(--kemet-color-emerald-700);
 
     --color-white: rgb(var(--kemet-color-white));
+    --color-off-white: rgb(var(--kemet-color-gray-50));
     --color-gray-300: rgb(var(--kemet-color-gray-300));
     --color-gray-800: rgb(var(--kemet-color-gray-800));
 

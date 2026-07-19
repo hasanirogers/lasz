@@ -1,12 +1,22 @@
 import { html, LitElement, unsafeCSS } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
+import appStore, { type AppStore } from '../../stores/app';
+import { ZustandController } from '../../controllers/zustand';
+
 import type HTMLKemetInputElement from 'kemet-ui/elements/input.d.ts';
 import type HTMLKemetDrawerElement from 'kemet-ui/elements/drawer.d.ts';
+
 import styles from './styles.css?inline';
+
+import '../lasz-hamburger';
 
 @customElement('lasz-nav-top')
 export default class LaszNavTop extends LitElement {
   static styles = [unsafeCSS(styles)];
+
+  private appController: ZustandController<AppStore, {
+    isMobile: AppStore['isMobile'];
+  }, {}>;
 
   @property({ type: String })
   home?: String;
@@ -26,7 +36,17 @@ export default class LaszNavTop extends LitElement {
   @query('kemet-input')
   input?: HTMLKemetInputElement;
 
+ constructor() {
+    super();
+    this.appController = new ZustandController(
+      this,
+      appStore,
+      (state) => ({ isMobile: state.isMobile }),
+    );
+  }
+
 	render() {
+    console.log(this.appController.data.isMobile);
 		return html`
       ${this.makeButton()}
       <div>
@@ -56,12 +76,8 @@ export default class LaszNavTop extends LitElement {
   }
 
   makeButton() {
-    if (window.matchMedia('screen and (max-width: 767px)').matches) {
-      return html`
-        <button @click="${() => this.toggleDrawer()}">
-          <kemet-icon-bootstrap icon="list" size="32"></kemet-icon-bootstrap>
-        </button>
-      `;
+    if (this.appController.data.isMobile) {
+      return html`<lasz-hamburger></lasz-hamburger>`;
     }
   }
 

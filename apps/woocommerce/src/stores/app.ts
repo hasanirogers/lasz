@@ -1,7 +1,9 @@
 import { createStore } from 'zustand/vanilla';
 
-export interface IAppStore {
+export interface AppStore {
   isMobile: boolean;
+  drawerOpened: boolean;
+  setDrawerOpened: (opened: boolean) => void;
 }
 
 const isMobile = () => {
@@ -9,8 +11,10 @@ const isMobile = () => {
 }
 
 
-const store = createStore<IAppStore>(() => ({
+const store = createStore<AppStore>((set) => ({
   isMobile: isMobile(),
+  drawerOpened: false,
+  setDrawerOpened: (opened: boolean) => set({ drawerOpened: opened }),
 }));
 
 window.addEventListener('resize', () => {

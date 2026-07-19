@@ -1,0 +1,13 @@
+:host {
+  display: flex;
+  align-self: center;
+  padding: 1rem;
+
+  @media (width > 1024px) {
+    display: none;
+  }
+}
+
+button {
+  color: inherit
+}

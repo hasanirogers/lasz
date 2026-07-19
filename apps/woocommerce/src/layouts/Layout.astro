@@ -8,6 +8,7 @@ import '@wordpress/block-library/build-style/theme.css';
 import '../styles/base.css';
 import '../styles/cea.css';
 import '../styles/wordpress.css';
+import { Image } from 'astro:assets';
 
 const { title = 'LaszCommerce' } = Astro.props;
 const isLoggedIn = !!Astro.cookies.get('lasz-user');
@@ -24,10 +25,10 @@ const isLoggedIn = !!Astro.cookies.get('lasz-user');
 		<title>{title}</title>
 	</head>
 	<body>
-    <kemet-drawer>
+    <kemet-drawer overlay side="right">
       <aside slot="navigation">
-        <kemet-icon-bootstrap icon="x-lg" size="24"></kemet-icon-bootstrap>
-        <a href="/"><img src="/logo.webp" alt="LaszCommerce" /></a>
+        <a href="/"><Image src="/logo.webp" alt="LaszCommerce" width={300} height={300} /></a>
+        <h2>{title}</h2>
         <nav>
           <a href="/">Home</a>
           <a href="/cart">Cart</a>
@@ -78,7 +79,7 @@ const isLoggedIn = !!Astro.cookies.get('lasz-user');
   import '../elements/lasz-nav-top';
   import '../elements/lasz-product';
 
-  // handle state
+  // handle alert
   import alertStore from '../stores/alert';
   import type HTMLKemetAlertElement from 'kemet-ui/elements/alert.d.ts';
   import type HTMLKemetIconBootstrapElement from 'kemet-ui/elements/icon-bootstrap.d.ts';
@@ -98,4 +99,43 @@ const isLoggedIn = !!Astro.cookies.get('lasz-user');
       alert.appendChild(alertIcon);
     }
   });
+
+  // handle hamburger
+  import appStore from '../stores/app';
+  import type HTMLKemetDrawerElement from 'kemet-ui/elements/drawer.d.ts';
+
+  const drawer = document.querySelector('kemet-drawer') as HTMLKemetDrawerElement;
+
+  appStore.subscribe((state) => {
+    if (state.drawerOpened) {
+      drawer.opened = state.drawerOpened;
+    }
+  });
+
+  drawer.addEventListener('kemet-closed', () => {
+    appStore.setState({ drawerOpened: false });
+  });
+
+  drawer.addEventListener('kemet-opened', () => {
+    appStore.setState({ drawerOpened: true });
+  });
 </script>
+<style>
+  aside {
+    display: flex;
+    gap: 0.5rem;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 1rem 2rem 1rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  nav {
+    color: var(--color-link);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+</style>

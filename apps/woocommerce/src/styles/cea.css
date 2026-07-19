@@ -4,7 +4,7 @@ kemet-button {
 
 kemet-drawer {
   --kemet-drawer-color: var(--color-text);
-  --kemet-drawer-background-color: var(--color-white);
+  --kemet-drawer-background-color: var(--color-off-white);
 
   display: block;
 

@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@astrojs/node": "^11.0.2",
+    "@lit-labs/ssr": "^3.3.1",
+    "@lit-labs/ssr-client": "^1.1.8",
+    "@webcomponents/template-shadowroot": "^0.2.1",
     "astro": "^7.0.0",
     "express": "^4.22.0",
     "lit": "^3.3.2"

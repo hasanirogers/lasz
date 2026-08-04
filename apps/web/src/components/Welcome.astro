@@ -1,6 +1,12 @@
 ---
 import background from '../assets/background.svg';
 import { Image } from 'astro:assets';
+import { renderLit } from '../shared/render-lit';
+import { html } from 'lit';
+// import { LaszStack } from '../elements/lasz-stack';
+
+
+const laszStackElement = renderLit(html`<lasz-stack></lasz-stack>`);
 ---
 
 <lasz-welcome>
@@ -14,7 +20,7 @@ import { Image } from 'astro:assets';
       <br /><br /><br />
       <p><code>npm create lasz-app@latest</code></p>
     </section>
-		<lasz-stack></lasz-stack>
+		<Fragment set:html={laszStackElement} />
 	</main>
 </lasz-welcome>
 
@@ -82,8 +88,5 @@ import { Image } from 'astro:assets';
 		height: 100%;
     opacity: 0.25;
 		filter: grayscale(1);
-	}
+	  }
 </style>
-<script>
-  import '../elements/lasz-stack';
-</script>

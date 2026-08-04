@@ -32,16 +32,16 @@ button[selected] {
   color: rgb(var(--lasz-dark-color));
 }
 
-button:nth-child(1) { transform: translateX(-50%) rotate(-12deg) scaleX(1); }
-button:nth-child(2) { transform: translateX(-50%) rotate(-5.5deg) scaleX(1); }
-button:nth-child(3) { transform: translateX(-50%) rotate(2.5deg) scaleX(1); }
-button:nth-child(4) { transform: translateX(-50%) rotate(11deg) scaleX(1); }
+button#lit { transform: translateX(-50%) rotate(-12deg) scaleX(1); }
+button#astro { transform: translateX(-50%) rotate(-5.5deg) scaleX(1); }
+button#system { transform: translateX(-50%) rotate(2.5deg) scaleX(1); }
+button#zustand { transform: translateX(-50%) rotate(11deg) scaleX(1); }
 
 @media screen and (width > 1024px) {
-  button:nth-child(1) { transform: translateX(-50%) rotate(-20deg) scaleX(1); }
-  button:nth-child(2) { transform: translateX(-50%) rotate(-6deg) scaleX(1); }
-  button:nth-child(3) { transform: translateX(-50%) rotate(6deg) scaleX(1); }
-  button:nth-child(4) { transform: translateX(-50%) rotate(20deg) scaleX(1); }
+  button#lit { transform: translateX(-50%) rotate(-20deg) scaleX(1); }
+  button#astro { transform: translateX(-50%) rotate(-6deg) scaleX(1); }
+  button#system { transform: translateX(-50%) rotate(6deg) scaleX(1); }
+  button#zustand { transform: translateX(-50%) rotate(20deg) scaleX(1); }
 }
 
 lasz-description {

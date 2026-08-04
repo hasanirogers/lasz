@@ -3,7 +3,7 @@ import { customElement, property } from 'lit/decorators.js';
 import styles from './styles.css?inline';
 
 @customElement('lasz-stack')
-export default class LaszStack extends LitElement {
+export class LaszStack extends LitElement {
   static styles = [unsafeCSS(styles)];
 
   @property()
@@ -11,10 +11,10 @@ export default class LaszStack extends LitElement {
 
   render() {
     return html`
-      <button ?selected=${this.selected === 0} @click=${() => (this.selected = 0)}><span>L</span>it</button>
-      <button ?selected=${this.selected === 1} @click=${() => (this.selected = 1)}><span>A</span>stro</button>
-      <button ?selected=${this.selected === 2} @click=${() => (this.selected = 2)}><span>S</span>ystem</button>
-      <button ?selected=${this.selected === 3} @click=${() => (this.selected = 3)}><span>Z</span>ustand</button>
+      <button id="lit" ?selected=${this.selected === 0} @click=${() => (this.selected = 0)}><span>L</span>it</button>
+      <button id="astro" ?selected=${this.selected === 1} @click=${() => (this.selected = 1)}><span>A</span>stro</button>
+      <button id="system" ?selected=${this.selected === 2} @click=${() => (this.selected = 2)}><span>S</span>ystem</button>
+      <button id="zustand" ?selected=${this.selected === 3} @click=${() => (this.selected = 3)}><span>Z</span>ustand</button>
       <div>
         ${this.makeDescription()}
       </div>

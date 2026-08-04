@@ -26,3 +26,13 @@ import '../styles/base.css';
 		background-color: rgb(var(--background-color));
 	}
 </style>
+
+<script>
+  import '@lit-labs/ssr-client/lit-element-hydrate-support.js';
+</script>
+<script type="module">
+  import('../elements/lasz-stack');
+
+  // Check if DSD is in the HTML
+  console.log('Raw HTML:', document.querySelector('lasz-stack')?.outerHTML);
+</script>

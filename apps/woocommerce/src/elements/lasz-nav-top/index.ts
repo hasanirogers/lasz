@@ -46,7 +46,6 @@ export default class LaszNavTop extends LitElement {
   }
 
 	render() {
-    console.log(this.appController.data.isMobile);
 		return html`
       ${this.makeButton()}
       <div>

@@ -1,3 +1,6 @@
+import { render } from '@lit-labs/ssr';
+import type { TemplateResult } from 'lit';
+
 const RUNTIME_ENVIRONMENT = import.meta.env.PUBLIC_RUNTIME_ENVIRONMENT;
 
 export const emitEvent = (element: HTMLElement, name: string, detail = {}, bubbles = true, composed = true) => {
@@ -45,3 +48,11 @@ export const throttle = <T extends (...args: any[]) => void>(
 
   return throttled;
 };
+
+export function renderLit(template: TemplateResult): string {
+  let html = '';
+  for (const chunk of render(template)) {
+    html += chunk;
+  }
+  return html;
+}

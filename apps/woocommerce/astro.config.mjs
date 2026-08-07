@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import node from '@astrojs/node';
+import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
 export default defineConfig({
@@ -11,6 +12,8 @@ export default defineConfig({
   adapter: node({
     mode: 'standalone'
   }),
+  site: 'https://woocommerce.belasz.dev',
+  integrations: [sitemap()],
   vite: {
     server: {
       allowedHosts: ['localhost', '127.0.0.1', '0.0.0.0', 'golf-wrought-copious.ngrok-free.dev']

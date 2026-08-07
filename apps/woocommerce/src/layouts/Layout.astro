@@ -1,17 +1,56 @@
 ---
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import { html } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
+import { renderLit } from '../shared/utilities';
+import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 
 import 'kemet-ui/styles/kemet.base.css';
 import '@wordpress/block-library/build-style/style.css';
 import '@wordpress/block-library/build-style/theme.css';
+
 import '../styles/base.css';
 import '../styles/cea.css';
 import '../styles/wordpress.css';
-import { Image } from 'astro:assets';
+
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
 
 const { title = 'LaszCommerce' } = Astro.props;
+
+const HeaderContainer = await AstroContainer.create();
+const HeaderHTML = await HeaderContainer.renderToString(Header);
+const SlotHTML = await Astro.slots.render('default');
+const FooterContainer = await AstroContainer.create();
+const FooterHTML = await FooterContainer.renderToString(Footer);
+
 const isLoggedIn = !!Astro.cookies.get('lasz-user');
+const accountLink = isLoggedIn ? '<a href="/account">Account</a>' : '';
+const loginLink = !isLoggedIn ? '<a href="/login">Login</a>' : '';
+const logoutLink = isLoggedIn ? '<a href="/logout">Logout</a>' : '';
+
+// Reduce Layout Shift by supporting Declarative Shadow DOM conversion of kemet-drawer
+const kemetDrawerElement = renderLit(html`
+  <kemet-drawer overlay side="right">
+    <aside slot="navigation" hidden>
+      <a href="/"><img src="/logo.webp" alt="LaszCommerce" width="300" height="300" /></a>
+      <h2>${title}</h2>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/cart">Cart</a>
+        <a href="/checkout">Checkout</a>
+        <a href="/order/status">Order Status</a>
+        ${unsafeHTML(accountLink)}
+        ${unsafeHTML(loginLink)}
+        ${unsafeHTML(logoutLink)}
+      </nav>
+    </aside>
+    <main slot="content">
+      ${unsafeHTML(HeaderHTML)}
+      ${unsafeHTML(SlotHTML)}
+      ${unsafeHTML(FooterHTML)}
+    </main>
+  </kemet-drawer>
+`);
 ---
 
 <html lang="en">
@@ -25,26 +64,7 @@ const isLoggedIn = !!Astro.cookies.get('lasz-user');
 		<title>{title}</title>
 	</head>
 	<body>
-    <kemet-drawer overlay side="right">
-      <aside slot="navigation">
-        <a href="/"><Image src="/logo.webp" alt="LaszCommerce" width={300} height={300} /></a>
-        <h2>{title}</h2>
-        <nav>
-          <a href="/">Home</a>
-          <a href="/cart">Cart</a>
-          <a href="/checkout">Checkout</a>
-          <a href="/order/status">Order Status</a>
-          {isLoggedIn && <a href="/account">Account</a>}
-          {!isLoggedIn && <a href="/login">Login</a>}
-          {isLoggedIn && <a href="/logout">Logout</a>}
-        </nav>
-      </aside>
-      <section slot="content">
-        <Header />
-        <slot />
-        <Footer />
-      </section>
-    </kemet-drawer>
+    <Fragment set:html={kemetDrawerElement} />
     <kemet-alert overlay="top-full" closable>
       <kemet-icon-bootstrap slot="icon" icon="info-circle" size="24"></kemet-icon-bootstrap>
     </kemet-alert>
@@ -52,8 +72,6 @@ const isLoggedIn = !!Astro.cookies.get('lasz-user');
 </html>
 
 <script>
-  // astro knows to load the following on the client
-  // we want these design system elements to load globally
   import 'kemet-ui/elements/drawer';
   import 'kemet-ui/elements/card';
   import 'kemet-ui/elements/button';
@@ -78,6 +96,7 @@ const isLoggedIn = !!Astro.cookies.get('lasz-user');
   import '../elements/lasz-header';
   import '../elements/lasz-nav-top';
   import '../elements/lasz-product';
+
 
   // handle alert
   import alertStore from '../stores/alert';
@@ -105,6 +124,12 @@ const isLoggedIn = !!Astro.cookies.get('lasz-user');
   import type HTMLKemetDrawerElement from 'kemet-ui/elements/drawer.d.ts';
 
   const drawer = document.querySelector('kemet-drawer') as HTMLKemetDrawerElement;
+  const aside = drawer.querySelector('aside');
+  console.log('hmmm', aside);
+
+  setTimeout(() => {
+    aside?.removeAttribute('hidden');
+  }, 1000);
 
   appStore.subscribe((state) => {
     if (state.drawerOpened) {

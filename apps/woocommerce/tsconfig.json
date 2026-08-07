@@ -4,6 +4,9 @@
     "strictNullChecks": true,
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
+    "paths": {
+      "kemet-ui/elements/*": ["../../node_modules/kemet-ui/dist/elements/*"]
+    }
   },
   "include": [".astro/types.d.ts", "**/*"],
   "exclude": ["dist"]

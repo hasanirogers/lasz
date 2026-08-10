@@ -4,12 +4,13 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "astro dev --host --port 4321",
+    "astro": "astro",
     "build": "astro build",
     "build:analyze": "astro build --analyze",
+    "dev": "astro dev --host --port 4321",
     "ngrok": "ngrok http 4321",
     "preview": "astro preview",
-    "astro": "astro"
+    "start": "node ./dist/server/entry.mjs"
   },
   "dependencies": {
     "@astrojs/lit": "^4.3.0",

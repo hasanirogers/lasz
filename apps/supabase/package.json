@@ -11,7 +11,7 @@
     "start": "node dist/server/entry.mjs"
   },
   "dependencies": {
-    "@astrojs/node": "^11.0.2",
+    "@astrojs/vercel": "^11.0.0",
     "@supabase/supabase-js": "^2.95.3",
     "astro": "^7.1.1",
     "express": "^4.22.0",

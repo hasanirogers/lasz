@@ -15,6 +15,10 @@ import '../styles/wordpress.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 
+interface Props {
+  title?: string;
+}
+
 const { title = 'LaszCommerce' } = Astro.props;
 
 const HeaderContainer = await AstroContainer.create();
@@ -96,6 +100,7 @@ const kemetDrawerElement = renderLit(html`
   import '../elements/lasz-header';
   import '../elements/lasz-nav-top';
   import '../elements/lasz-product';
+  import '../elements/lasz-newsletter-form';
 
 
   // handle alert
@@ -125,7 +130,6 @@ const kemetDrawerElement = renderLit(html`
 
   const drawer = document.querySelector('kemet-drawer') as HTMLKemetDrawerElement;
   const aside = drawer.querySelector('aside');
-  console.log('hmmm', aside);
 
   setTimeout(() => {
     aside?.removeAttribute('hidden');

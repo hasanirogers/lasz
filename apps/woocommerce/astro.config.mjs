@@ -1,6 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 import sitemap from '@astrojs/sitemap';
 
 // https://astro.build/config
@@ -10,9 +10,7 @@ export default defineConfig({
     inlineStylesheets: 'always',
   },
   output: 'server',
-  adapter: node({
-    mode: 'standalone'
-  }),
+  adapter: vercel(),
   site: 'https://woocommerce.belasz.dev',
   integrations: [sitemap()],
   vite: {

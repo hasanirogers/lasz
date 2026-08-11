@@ -148,6 +148,14 @@ const kemetDrawerElement = renderLit(html`
   drawer.addEventListener('kemet-opened', () => {
     appStore.setState({ drawerOpened: true });
   });
+
+  // remove hidden from nav-top on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
+    const navTop = document.querySelector('lasz-nav-top');
+    if (navTop) {
+      navTop.removeAttribute('hidden');
+    }
+  });
 </script>
 <style>
   aside {

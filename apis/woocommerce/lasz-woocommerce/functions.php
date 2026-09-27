@@ -34,8 +34,6 @@ if (!class_exists('lasz_woocommerce\Theme')) {
         require_once(get_template_directory() . '/includes/admin/' . $adminClass);
       }
 
-      require_once(get_template_directory() . '/blocks/blocks.php');
-
       // Hooks
       // -----
 
@@ -116,11 +114,6 @@ if (!class_exists('lasz_woocommerce\Theme')) {
       $upload_mimes['svg'] = 'image/svg+xml';
       $upload_mimes['svgz'] = 'image/svg+xml';
       return $upload_mimes;
-    }
-
-    public static function enqueue_styles()
-    {
-      wp_enqueue_style('admin-css', get_theme_file_uri('/admin.css'));
     }
 
     public static function add_cors_http_header()

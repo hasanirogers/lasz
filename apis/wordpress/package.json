@@ -1,0 +1,20 @@
+{
+  "name": "@lasz/wordpress-api",
+  "version": "1.0.0",
+  "description": "A WordPress environment.",
+  "main": "index.js",
+  "scripts": {
+    "log": "wp-env logs development",
+    "path": "wp-env install-path",
+    "plugins": "wp-env run cli wp plugin install updraftplus wp-mail-smtp",
+    "start": "wp-env start",
+    "stop": "wp-env stop all",
+    "reset": "wp-env reset",
+    "update": "wp-env start --update"
+  },
+  "author": "Deific Arts LLC contact@deificarts.com",
+  "license": "ISC",
+  "devDependencies": {
+    "@wordpress/env": "^11.3.0"
+  }
+}
